@@ -8,7 +8,7 @@
    ======================================================================== */
 
 #include <vector>
-
+#define OCTREE_MAX_DEPTH 10;
 struct Octree;
 
 struct Octree
@@ -16,31 +16,16 @@ struct Octree
     // Define size of (sub)space
     Vec3 origin;
     Vec3 half_dimensions;
+    AABBox aabb;
 
     Octree *children;
     uint32 entityIds[4];
     uint32 entityCount;
+
+    int32 whichChild(Vec3 *point);
+    bool isLeafNode();
+
 };
-
-int32 whichChild(Vec3 *point, Octree *oct)
-{
-    // children go from back bottom left to front top right 
-    int octant = 0;
-    if(point->x > oct->origin.x)
-    {
-        octant |= 1;
-    }
-    if(point->y > oct->origin.y)
-    {
-        octant |= 2;
-    }
-    if(point->z > oct->origin.z)
-    {
-        octant |= 4;
-    }
-
-    return octant;
-}
 
 bool isLeafNode(Octree *oct)
 {

@@ -25,11 +25,11 @@ struct Entity
     Entity(uint32 _id, real32 x1, real32 y1, real32 z1, real32 x2, real32 y2, real32 z2) : id(_id), aabb(x1, y1, z1, x2, y2, z2) {}
 };
 
-bool32 doBoundsCollide(AABBox *box1, AABBox *box2)
+bool32 doBoundsCollide(AABBox box1, AABBox box2)
 {
-    return ( (box1->min.x < box2->max.x) && (box1->max.x > box2->min.x)  &&
-             (box1->min.y < box2->max.y) && (box1->max.y > box2->min.y)  &&
-             (box1->min.z < box2->max.z) && (box1->max.z > box2->min.z) );
+    return ( (box1.min.x < box2.max.x) && (box1.max.x > box2.min.x)  &&
+             (box1.min.y < box2.max.y) && (box1.max.y > box2.min.y)  &&
+             (box1.min.z < box2.max.z) && (box1.max.z > box2.min.z) );
  
 }
 

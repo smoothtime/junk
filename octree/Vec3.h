@@ -19,5 +19,20 @@ struct Vec3
     static void operator delete(void *block) { 
         //fuck
     }
+
+    Vec3& operator+=(const Vec3& rhs)
+    {
+        this.x += rhs.x;
+        this.y += rhs.y;
+        this.z += rhs.z;
+        return *this;
+    }
                                             
 };
+
+Vec3 Vec3ScalarMult(real32 scale, Vec3 vec)
+{
+    return Vec3(vec.x * scale,
+                vec.y * scale,
+                vec.z * scale);
+}

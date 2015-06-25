@@ -55,33 +55,6 @@ int main(int argc, char **argv)
     Octree tree = { *origin, *half_dim,
                     0, 
                     entityIds, entityCount };
-    Vec3 *zero = new Vec3(0.0f, 0.0f, 0.0f);
-   
-    Vec3 *lbb = new Vec3(-8.0f, -8.0f, -8.0f); 
-    Vec3 *rbb = new Vec3(8.0f, -8.0f, -8.0f);
-    Vec3 *ltb = new Vec3(-8.0f, 8.0f, -8.0f);
-    Vec3 *rtb = new Vec3(8.0f, 8.0f, -8.0f);
-   
-    Vec3 *lbf = new Vec3(-8.0f, -8.0f, 8.0f);
-    Vec3 *rbf = new Vec3(8.0f, -8.0f, 8.0f);
-    Vec3 *ltf = new Vec3(-8.0f, 8.0f, 8.0f);
-    Vec3 *rtf = new Vec3(8.0f, 8.0f, 8.0f);
-   
-    printVector(*zero, whichChild(zero, &tree));
-
-    printf("\n");
-   
-    printVector(*lbb, whichChild(lbb, &tree));
-    printVector(*rbb, whichChild(rbb, &tree));
-    printVector(*ltb, whichChild(ltb, &tree));
-    printVector(*rtb, whichChild(rtb, &tree));
-
-    printf("\n");
-   
-    printVector(*lbf, whichChild(lbf, &tree));
-    printVector(*rbf, whichChild(rbf, &tree));
-    printVector(*ltf, whichChild(ltf, &tree));
-    printVector(*rtf, whichChild(rtf, &tree));
 
     insert(1, lbb, &tree);
     insert(2, rbb, &tree);
