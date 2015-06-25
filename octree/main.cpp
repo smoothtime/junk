@@ -28,6 +28,8 @@ static MemoryArena global_arena = initializeArena(8388608);
 #include "OneTypeMemoryArena.h"
 static OneTypeMemoryArena entity_arena = initializeOneTypeArena(sizeof(Entity), 16);
 #include "Octree.h"
+#include "jvector.h"
+
 
 
 void printVector(Vec3 vec, int32 child)
@@ -53,18 +55,19 @@ int main(int argc, char **argv)
     uint32 entityIds = {0};
     uint32 entityCount = 0;
     Octree tree = { *origin, *half_dim,
-                    0, 
+                    AABBox(*origin, *half_dim),
+                    0,
                     entityIds, entityCount };
 
-    insert(1, lbb, &tree);
-    insert(2, rbb, &tree);
-    insert(3, ltb, &tree);
-    insert(4, rtb, &tree);
-
-    insert(5, lbf, &tree);
-    insert(6, rbf, &tree);
-    insert(7, ltf, &tree);
-    insert(8, rtf, &tree);
-
+    junk::JVector<int32> *test1 = new junk::JVector<int32>();
+    test1->push_back(4);
+    test1->push_back(2);
+    test1->push_back(1);
+    test1->push_back(0);
+    test1->push_back(-1);
+    int32 four = (*test1)[0];
+    int32 first = *test1->begin();
+    int32 last = *test1->end();
+    size_t length = test1->size();
     return 0;
 }

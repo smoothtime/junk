@@ -12,7 +12,7 @@ struct AABBox
     Vec3 min;
     Vec3 max;
 
-    AABBox(Vec3 _min, Vec3 _max) : min(_min), max(_max) {}
+    AABBox(const Vec3 &_min, const Vec3 &_max) : min(_min), max(_max) {}
     AABBox(real32 x1, real32 y1, real32 z1, real32 x2, real32 y2, real32 z2) : min(x1, y1, z1), max(x2, y2, z2) {}
 };
 

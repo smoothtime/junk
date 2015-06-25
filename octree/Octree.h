@@ -34,7 +34,7 @@ bool isLeafNode(Octree *oct)
 
 void insert(uint32 id, Vec3 *position, Octree *oct)
 {
-    // if a leaf node
+    /* if a leaf node
     if(isLeafNode(oct))
     {
         // if all children are assigned, need to split and reinsert 
@@ -65,6 +65,7 @@ void insert(uint32 id, Vec3 *position, Octree *oct)
         int32 child = whichChild(position, oct);
         insert(id, position, &oct->children[child]);
     }
+    */
 }
 
 void insert(Entity *entity, Octree *oct)
