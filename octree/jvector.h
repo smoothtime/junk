@@ -29,11 +29,14 @@ private:
     size_type _size;
     size_type _capacity;
     T *_data;
+    Allocator *_allocator;
 
-    static T*
+    T*
     allocate(size_type size)
     {
-        return static_cast<T*>(malloc(sizeof(T) * size));
+        T *result;
+        _allocator->allocateArray(size, result);
+        return result;
     }
 
     static void
@@ -61,10 +64,11 @@ private:
     void
     reallocate(size_type capacity)
     {
-        T* newData = allocate(capacity);
+        T* newData;
+        _allocator->allocateArray(capacity, newData);
         copyRange(_data, _data + _size, newData);
         deleteRange(_data, _data + _size);
-        free(_data);
+        _allocator->deallocate(_data);
         _data = newData;
         _capacity = capacity;
     }
@@ -93,22 +97,25 @@ public:
     typedef T *iterator;
     typedef T value_type;
 
-    JVector()
+    JVector(Allocator &allocator)
     {
         _size = 0;
         _capacity = 0;
         _data = 0;
+        _allocator = &allocator;
     }
     
-    JVector(size_type size)
+    JVector(size_type size, Allocator &allocator)
     {
         _size = size;
         _capacity = size;
+        _allocator = &allocator;
         _data = allocate(sizeof(value_type) * size);
     }
 
     JVector(const JVector &copy)
     {
+        _allocator = copy._allocator;
         allocate(copy.size());
         copyRange(copy.begin(), copy.end(), _data);
     }
@@ -198,7 +205,7 @@ public:
             return;
         }
         size_type newCapacity = newSize;
-        if(newCapacity < _size * 2);
+        if(newCapacity < _size * 2)
         {
             newCapacity = _size * 2;
         }

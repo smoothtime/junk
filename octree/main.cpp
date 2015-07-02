@@ -21,45 +21,65 @@ typedef double real64;
 #include <math.h>
 #include <stdio.h>
 #include <cstdlib>
-#include "MemoryArena.h"
-static MemoryArena global_arena = initializeArena(8388608);
+#include <cassert>
+#include "allocator.h"
+#include "mallocallocator.h"
+#include "globalallocator.h"
 #include "Vec3.h"
 #include "Entity.h"
-#include "OneTypeMemoryArena.h"
-static OneTypeMemoryArena entity_arena = initializeOneTypeArena(sizeof(Entity), 16);
-#include "Octree.h"
+#include "Octree.cpp"
 #include "jvector.h"
-
-
+#include "radixsort.h"
 
 void printVector(Vec3 vec, int32 child)
 {
     printf("%+2.4f %+2.4f %+2.4f: child: %d\n", vec.x, vec.y, vec.z, child);
 }
 
-void initEntities()
-{
-    Entity *element = PushArray(&entity_arena, 8, Entity);
-    new(element++) Entity(1, -8.1f, -8.1f, -8.1f, -8.0f, -8.0f, -8.0f);
-    new(element++) Entity(1, 8.0f, -8.1f, -8.1f, 8.1f, -8.0f, -8.0f);
-
-}
-
 int main(int argc, char **argv)
 {
-    initEntities();
     printf("Hello\n");
-    Vec3 *origin = new Vec3(0.0f, 0.0f, 0.0f);
-    Vec3 *half_dim = new Vec3(10.0f, 10.0f, 10.0f);
-    //Octree *children[8] = { NULL };
+
+    MallocAllocator mallocator;
+    void *mem = mallocator.allocate(1024);
+
+    Vec3 vec1(-0.5f, -0.5f, -0.5f);
+    Vec3 vec2( 0.5f,  0.5f,  0.5f);
+    Vec3 origin = vec1 + ((vec2 - vec1) * 0.5f);
+
+    AABBox box1(vec1, vec2);
+    AABBox box2(0.01f, 0.01f, 0.01f, 0.05f, 0.05f, 0.05f); 
+    
     uint32 entityIds = {0};
     uint32 entityCount = 0;
-    Octree tree = { *origin, *half_dim,
-                    AABBox(*origin, *half_dim),
-                    0,
-                    entityIds, entityCount };
+    Octree tree = { origin, AABBox(vec1, vec2),
+                    0, entityIds, entityCount };
+    tree.aabb = box1;
 
-    junk::JVector<int32> *test1 = new junk::JVector<int32>();
+    Entity entity1(1, box2);
+    Entity entity2(2, AABBox(box2.min * 2.0f, box2.max * 2.0));
+    Entity entity3(3, AABBox(box2.min * 3.0f, box2.max * 3.0));
+    Entity entity4(4, AABBox(box2.min * 4.0f, box2.max * 4.0));
+    Entity entity5(5, AABBox(box2.min * 5.0f, box2.max * 5.0));
+
+    tree.insert(entity1);
+    tree.insert(entity2);
+    tree.insert(entity3);
+    tree.insert(entity4);
+    tree.insert(entity5);
+
+    uint32 toSort[5] = { 0, 3, 16, 9, 4 };
+    
+    countSort(toSort, sizeof(toSort) / sizeof(toSort[0]), 1);
+    countSort(toSort, sizeof(toSort) / sizeof(toSort[0]), 2);
+
+    return 0;
+}
+
+void
+jvectortest(Allocator *mallocator)
+{
+    junk::JVector<int32> *test1 = new junk::JVector<int32>(*mallocator);
     test1->push_back(4);
     test1->push_back(2);
     test1->push_back(1);
@@ -69,5 +89,5 @@ int main(int argc, char **argv)
     int32 first = *test1->begin();
     int32 last = *test1->end();
     size_t length = test1->size();
-    return 0;
+    test1->resize(5);
 }

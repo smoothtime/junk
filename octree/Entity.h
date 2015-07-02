@@ -9,20 +9,33 @@
 
 struct AABBox
 {
+    AABBox(real32 x1, real32 y1, real32 z1, real32 x2, real32 y2, real32 z2) : min(x1, y1, z1), max(x2, y2, z2) {}
+    AABBox(const Vec3 &_min, const Vec3 &_max) : min(_min), max(_max) {}
+    
     Vec3 min;
     Vec3 max;
-
-    AABBox(const Vec3 &_min, const Vec3 &_max) : min(_min), max(_max) {}
-    AABBox(real32 x1, real32 y1, real32 z1, real32 x2, real32 y2, real32 z2) : min(x1, y1, z1), max(x2, y2, z2) {}
 };
 
 struct Entity
 {
+    Entity(uint32 _id, real32 x1, real32 y1, real32 z1, real32 x2, real32 y2, real32 z2)
+            : id(_id), aabb(x1, y1, z1, x2, y2, z2)
+    {
+    }
+
+    Entity(uint32 _id, const Vec3 &min, const Vec3 &max)
+            : id(_id), aabb(min, max)
+    {
+    }
+
+    Entity(uint32 _id, const AABBox &box)
+            : id(_id), aabb(box)
+    {
+    }
+    
     uint32 id;
     AABBox aabb;
-
-    //Entity(uint32 _id, Vec3 min, Vec3 max) : id(_id), aabb(min, max) {}
-    Entity(uint32 _id, real32 x1, real32 y1, real32 z1, real32 x2, real32 y2, real32 z2) : id(_id), aabb(x1, y1, z1, x2, y2, z2) {}
+    
 };
 
 bool32 doBoundsCollide(AABBox box1, AABBox box2)
