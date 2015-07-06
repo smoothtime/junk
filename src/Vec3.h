@@ -10,7 +10,8 @@ struct Vec3
         };
         float xyz[3];
     };
-    
+
+	Vec3() {}
     Vec3(real32 x_, real32 y_, real32 z_) : x(x_), y(y_), z(z_) {}
     Vec3(const Vec3& copy)
     {

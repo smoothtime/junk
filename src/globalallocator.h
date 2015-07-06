@@ -8,7 +8,7 @@
    ======================================================================== */
 
 MallocAllocator global_allocator;
-Allocator *
+Allocator*
 GlobalAllocator()
 {
     return &global_allocator;

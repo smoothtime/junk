@@ -13,19 +13,36 @@ struct Octree;
 
 struct Octree
 {
+	Octree() {}
+	Octree(Allocator *treeAllocator, Vec3 org, AABBox bounds, junk::JVector<Entity> *ents)
+	{
+		allocator = treeAllocator;
+		origin = org;
+		aabb = bounds;
+		children = 0;
+		entityCount = 0;
+		entities = ents;
+	}
+	
+	Allocator *allocator;
     // Define size of (sub)space
     Vec3 origin;
     AABBox aabb;
 
     Octree *children;
-    uint32 entityIds[4];
+	junk::JVector<Entity> *entities;
+    uint32 entityIndexes[4];
     uint32 entityCount;
 
-    int32 whichChild(const Vec3 &point);
     bool isLeafNode();
-    void insert(Entity &entity, int32 depth);
-public:
-    void insert(Entity &entity);
+	void insert(uint32 ent_index);
+    void insert(uint32 ent_index, int32 depth);
+    
+
+private:
+	uint8 whichOctant(const Vec3 &point);
+	uint8 whichChildren(AABBox bounds);
+	void insertToCollidedChildren(uint32 ent_index, int32 depth);
 
 };
 

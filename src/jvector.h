@@ -97,19 +97,21 @@ public:
     typedef T *iterator;
     typedef T value_type;
 
-    JVector(Allocator &allocator)
+	JVector() {}
+
+    JVector(Allocator *allocator)
     {
         _size = 0;
         _capacity = 0;
         _data = 0;
-        _allocator = &allocator;
+        _allocator = allocator;
     }
     
-    JVector(size_type size, Allocator &allocator)
+    JVector(size_type size, Allocator *allocator)
     {
         _size = size;
         _capacity = size;
-        _allocator = &allocator;
+        _allocator = allocator;
         _data = allocate(sizeof(value_type) * size);
     }
 
