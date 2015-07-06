@@ -27,9 +27,11 @@ typedef double real64;
 #include "globalallocator.h"
 #include "Vec3.h"
 #include "Entity.h"
-#include "Octree.cpp"
 #include "jvector.h"
+#include "Octree.cpp"
 #include "radixsort.h"
+
+static junk::JVector<Entity> entities(GlobalAllocator());
 
 void printVector(Vec3 vec, int32 child)
 {
@@ -40,38 +42,29 @@ int main(int argc, char **argv)
 {
     printf("Hello\n");
 
-    MallocAllocator mallocator;
-    void *mem = mallocator.allocate(1024);
-
     Vec3 vec1(-0.5f, -0.5f, -0.5f);
     Vec3 vec2( 0.5f,  0.5f,  0.5f);
     Vec3 origin = vec1 + ((vec2 - vec1) * 0.5f);
 
+    MallocAllocator mallocator;
+                
     AABBox box1(vec1, vec2);
     AABBox box2(0.01f, 0.01f, 0.01f, 0.05f, 0.05f, 0.05f); 
-    
-    uint32 entityIds = {0};
+
     uint32 entityCount = 0;
-    Octree tree = { origin, AABBox(vec1, vec2),
-                    0, entityIds, entityCount };
-    tree.aabb = box1;
 
-    Entity entity1(1, box2);
-    Entity entity2(2, AABBox(box2.min * 2.0f, box2.max * 2.0));
-    Entity entity3(3, AABBox(box2.min * 3.0f, box2.max * 3.0));
-    Entity entity4(4, AABBox(box2.min * 4.0f, box2.max * 4.0));
-    Entity entity5(5, AABBox(box2.min * 5.0f, box2.max * 5.0));
+    entities.push_back(Entity(1, box2));
 
-    tree.insert(entity1);
-    tree.insert(entity2);
-    tree.insert(entity3);
-    tree.insert(entity4);
-    tree.insert(entity5);
+    entities.push_back(Entity(2, AABBox(box2._min * 2.0f, box2._max * 2.0)));
+    entities.push_back(Entity(3, AABBox(box2._min * 3.0f, box2._max * 3.0)));
+    entities.push_back(Entity(4, AABBox(box2._min * 4.0f, box2._max * 4.0)));
+    entities.push_back(Entity(5, AABBox(box2._min * 5.0f, box2._max * 5.0)));
 
-    uint32 toSort[5] = { 0, 3, 16, 9, 4 };
-    
-    countSort(toSort, sizeof(toSort) / sizeof(toSort[0]), 1);
-    countSort(toSort, sizeof(toSort) / sizeof(toSort[0]), 2);
+    Octree tree(&mallocator, origin, AABBox(vec1, vec2), &entities);
+    for(uint32 i = 0; i < entities.size(); ++i)
+    {
+        tree.insert(i);
+    }
 
     return 0;
 }
@@ -79,7 +72,7 @@ int main(int argc, char **argv)
 void
 jvectortest(Allocator *mallocator)
 {
-    junk::JVector<int32> *test1 = new junk::JVector<int32>(*mallocator);
+    junk::JVector<int32> *test1 = new junk::JVector<int32>(mallocator);
     test1->push_back(4);
     test1->push_back(2);
     test1->push_back(1);
