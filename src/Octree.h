@@ -13,36 +13,38 @@ struct Octree;
 
 struct Octree
 {
-	Octree() {}
-	Octree(Allocator *treeAllocator, Vec3 org, AABBox bounds, junk::JVector<Entity> *ents)
-	{
-		allocator = treeAllocator;
-		origin = org;
-		aabb = bounds;
-		children = 0;
-		entityCount = 0;
-		entities = ents;
-	}
-	
-	Allocator *allocator;
+    Octree() {}
+    Octree(Allocator *treeAllocator, Vec3 org, AABBox bounds, junk::JVector<Entity> *ents)
+    {
+        allocator = treeAllocator;
+        origin = org;
+        aabb = bounds;
+        children = 0;
+        entityCount = 0;
+        entities = ents;
+        new (&entityIndexes) junk::JVector<uint32>(4, treeAllocator);
+    }
+    
+    Allocator *allocator;
     // Define size of (sub)space
     Vec3 origin;
     AABBox aabb;
 
     Octree *children;
-	junk::JVector<Entity> *entities;
-    uint32 entityIndexes[4];
+    junk::JVector<Entity> *entities;
+    junk::JVector<uint32> entityIndexes;
+    //uint32 entityIndexes[4];
     uint32 entityCount;
 
     bool isLeafNode();
-	void insert(uint32 ent_index);
+    void insert(uint32 ent_index);
     void insert(uint32 ent_index, int32 depth);
     
 
 private:
-	uint8 whichOctant(const Vec3 &point);
-	uint8 whichChildren(AABBox bounds);
-	void insertToCollidedChildren(uint32 ent_index, int32 depth);
+    uint8 whichOctant(const Vec3 &point);
+    uint8 whichChildren(AABBox bounds);
+    void insertToCollidedChildren(uint32 ent_index, int32 depth);
 
 };
 

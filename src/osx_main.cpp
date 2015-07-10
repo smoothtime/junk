@@ -41,31 +41,79 @@ void printVector(Vec3 vec, int32 child)
 int main(int argc, char **argv)
 {
     printf("Hello\n");
-
+    
     Vec3 vec1(-0.5f, -0.5f, -0.5f);
     Vec3 vec2( 0.5f,  0.5f,  0.5f);
-    Vec3 origin = vec1 + ((vec2 - vec1) * 0.5f);
-
+    Vec3 origin = vec1 + ((vec2 - vec1) * 0.5f); 
+    
     MallocAllocator mallocator;
-                
+
+    junk::JVector<uint32> integers(4, &mallocator);
+    integers.push_back(0);
+    integers.push_back(1);
+    integers.push_back(2);
+    integers.push_back(3);
+    integers.push_back(4);
+    
+    
     AABBox box1(vec1, vec2);
-    AABBox box2(0.01f, 0.01f, 0.01f, 0.05f, 0.05f, 0.05f); 
-
-    uint32 entityCount = 0;
-
+    AABBox box2(0.01f, 0.01f, 0.01f, 0.05f, 0.05f, 0.05f);
+    
     entities.push_back(Entity(1, box2));
-
+    
     entities.push_back(Entity(2, AABBox(box2._min * 2.0f, box2._max * 2.0)));
     entities.push_back(Entity(3, AABBox(box2._min * 3.0f, box2._max * 3.0)));
     entities.push_back(Entity(4, AABBox(box2._min * 4.0f, box2._max * 4.0)));
     entities.push_back(Entity(5, AABBox(box2._min * 5.0f, box2._max * 5.0)));
 
     Octree tree(&mallocator, origin, AABBox(vec1, vec2), &entities);
+    
+
+    /*
+    Vec3 vecMin( 0.0f,  0.0f,  0.0f);
+    Vec3 vecMax( 0.5f,  0.5f,  0.5f);
+    Vec3 org = vecMin + ((vecMax - vecMin) * 0.5f);
+
+    AABBox box0(0.0f, 0.0f, 0.0f,
+                0.05f, 0.05f, 0.05f);
+    entities.push_back(Entity((uint32) 'a', box0));
+
+    AABBox box1(0.3f, 0.0f, 0.0f,
+                0.4f, 0.2f, 0.2f);
+    entities.push_back(Entity((uint32) 'b', box1));
+
+    AABBox box2(0.0f, 0.3f, 0.0f,
+                0.2f, 0.4f, 0.2f);
+    entities.push_back(Entity((uint32) 'c', box2));
+
+    AABBox box3(0.3f, 0.3f, 0.0f,
+                0.4f, 0.4f, 0.2f);
+    entities.push_back(Entity((uint32) 'd', box3));
+
+    AABBox box4(0.0f, 0.0f, 0.3f,
+                0.2f, 0.2f, 0.4f);
+    entities.push_back(Entity((uint32) 'e', box4));
+
+    AABBox box5(0.3f, 0.0f, 0.3f,
+                0.4f, 0.2f, 0.4f);
+    entities.push_back(Entity((uint32) 'f', box5));
+
+    AABBox box6(0.0f, 0.3f, 0.3f,
+                0.2f, 0.4f, 0.4f);
+    entities.push_back(Entity((uint32) 'g', box6));
+
+    AABBox box7(0.3f, 0.3f, 0.3f,
+                0.4f, 0.4f, 0.4f);
+    entities.push_back(Entity((uint32) 'h', box7));    
+    
+    Octree tree(&mallocator, org, AABBox(vecMin, vecMax), &entities);
+    */
+    
     for(uint32 i = 0; i < entities.size(); ++i)
     {
         tree.insert(i);
     }
-
+    
     return 0;
 }
 

@@ -97,7 +97,7 @@ public:
     typedef T *iterator;
     typedef T value_type;
 
-	JVector() {}
+    JVector() {}
 
     JVector(Allocator *allocator)
     {
@@ -107,12 +107,12 @@ public:
         _allocator = allocator;
     }
     
-    JVector(size_type size, Allocator *allocator)
+    JVector(size_type cap, Allocator *allocator)
     {
-        _size = size;
-        _capacity = size;
+        _size = 0;
+        _capacity = cap;
         _allocator = allocator;
-        _data = allocate(sizeof(value_type) * size);
+        _data = allocate(sizeof(value_type) * _capacity);
     }
 
     JVector(const JVector &copy)
