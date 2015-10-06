@@ -69,6 +69,33 @@ Octree::insert(uint32 ent_index, int32 depth)
     entityCount++;
 }
 
+void
+Octree::checkCollisions(uint32 ent_index, junk::JSet<uint32> &collisions)
+{
+    if(isLeafNode())
+    {
+        for(int32 i = 0; i < entityIndexes.size(); ++i)
+        {
+            if(doBoundsCollide((*entities)[entityIndexes[i]].aabb, (*entities)[ent_index].aabb))
+            {
+                collisions.push_back(entityIndexes[i]);
+            }
+        }
+    }
+    else
+    {
+        uint8 toCheck = whichChildren((*entities)[ent_index].aabb);
+        for(int32 i = 0; i < 8; ++i)
+        {
+            if((toCheck >> i) & 1)
+            {
+                children[i].checkCollisions(ent_index, collisions);
+            }
+        }
+            
+    }
+}
+
 uint8
 Octree::whichOctant(const Vec3 &point)
 {

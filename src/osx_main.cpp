@@ -28,6 +28,7 @@ typedef double real64;
 #include "Vec3.h"
 #include "Entity.h"
 #include "jvector.h"
+#include "jset.h"
 #include "Octree.cpp"
 #include "radixsort.h"
 
@@ -67,53 +68,12 @@ int main(int argc, char **argv)
     entities.push_back(Entity(5, AABBox(box2._min * 5.0f, box2._max * 5.0)));
 
     Octree tree(&mallocator, origin, AABBox(vec1, vec2), &entities);
-    
-
-    /*
-    Vec3 vecMin( 0.0f,  0.0f,  0.0f);
-    Vec3 vecMax( 0.5f,  0.5f,  0.5f);
-    Vec3 org = vecMin + ((vecMax - vecMin) * 0.5f);
-
-    AABBox box0(0.0f, 0.0f, 0.0f,
-                0.05f, 0.05f, 0.05f);
-    entities.push_back(Entity((uint32) 'a', box0));
-
-    AABBox box1(0.3f, 0.0f, 0.0f,
-                0.4f, 0.2f, 0.2f);
-    entities.push_back(Entity((uint32) 'b', box1));
-
-    AABBox box2(0.0f, 0.3f, 0.0f,
-                0.2f, 0.4f, 0.2f);
-    entities.push_back(Entity((uint32) 'c', box2));
-
-    AABBox box3(0.3f, 0.3f, 0.0f,
-                0.4f, 0.4f, 0.2f);
-    entities.push_back(Entity((uint32) 'd', box3));
-
-    AABBox box4(0.0f, 0.0f, 0.3f,
-                0.2f, 0.2f, 0.4f);
-    entities.push_back(Entity((uint32) 'e', box4));
-
-    AABBox box5(0.3f, 0.0f, 0.3f,
-                0.4f, 0.2f, 0.4f);
-    entities.push_back(Entity((uint32) 'f', box5));
-
-    AABBox box6(0.0f, 0.3f, 0.3f,
-                0.2f, 0.4f, 0.4f);
-    entities.push_back(Entity((uint32) 'g', box6));
-
-    AABBox box7(0.3f, 0.3f, 0.3f,
-                0.4f, 0.4f, 0.4f);
-    entities.push_back(Entity((uint32) 'h', box7));    
-    
-    Octree tree(&mallocator, org, AABBox(vecMin, vecMax), &entities);
-    */
-    
     for(uint32 i = 0; i < entities.size(); ++i)
     {
         tree.insert(i);
     }
     
+    printf("Hello\n");
     return 0;
 }
 

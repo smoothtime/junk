@@ -39,7 +39,7 @@ struct Octree
     bool isLeafNode();
     void insert(uint32 ent_index);
     void insert(uint32 ent_index, int32 depth);
-    
+    void checkCollisions(uint32 ent_index, junk::JSet<uint32> &collisions);
 
 private:
     uint8 whichOctant(const Vec3 &point);
