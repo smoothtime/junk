@@ -8,4 +8,8 @@
    ======================================================================== */
 
 #define WIN32_MAIN_H
+
+#include <assert.h>
+#define ASSERT assert
+
 #endif

@@ -1,4 +1,4 @@
-#if !defined(MALLOCALLOCATOR_H)
+#if !defined(LINEARALLOCATOR_H)
 /* ========================================================================
    $File: $
    $Date: $
@@ -7,23 +7,19 @@
    $Notice: (C) Copyright 2015 by Extreme, Inc. All Rights Reserved. $
    ======================================================================== */
 
-class MallocAllocator : public Allocator
+#define LINEARALLOCATOR_H
+class LinearAllocator : public BaseAllocator
 {
 public:
+    LinearAllocator(uint32 identifier, size_t allocationSize, Allocator *backingAllocator);
+
     void *
-    allocate(uint64 size, uint8 alignment)
-    {
-        assert(size);
-        return malloc(static_cast<size_t>(size));
-    }
+    allocate(uint64 size, uint8 alignment = 4) override;
 
     void
-    deallocate(void *ptr)
-    {
-        free(ptr);
-    }
-};
+    deallocate(void *ptr) override;
 
-#define MALLOCALLOCATOR_H
+private:
+    void *tail;
+}
 #endif
- 
