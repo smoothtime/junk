@@ -5,24 +5,9 @@
    $Creator: James Wells $
    $Notice: (C) Copyright 2014 by Molly Rocket, Inc. All Rights Reserved. $
    ======================================================================== */
+#include "win32_main.h"
 #include <windows.h>
-#include <stdint.h>
-typedef int8_t int8;
-typedef int16_t int16;
-typedef int32_t int32;
-typedef int64_t int64;
-
-typedef int32 bool32;
-
-typedef uint8_t uint8;
-typedef uint16_t uint16;
-typedef uint32_t uint32;
-typedef uint64_t uint64;
-
-typedef float real32;
-typedef double real64;
-typedef uintptr_t uptr;
-
+#include "platform.h"
 #include <math.h>
 #include <stdio.h>
 #include <cstdlib>
@@ -41,16 +26,15 @@ typedef uintptr_t uptr;
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-
+#include "Shader.cpp"
 
 static junk::JVector<Entity> entities(GlobalAllocator());
 GLfloat hardcodedVerts[] =
 {
-    // First triangle
-     0.5f,  0.5f, 0.0f,  // Top Right
-     0.5f, -0.5f, 0.0f,  // Bottom Right
-    -0.5f, -0.5f, 0.0f,  // Bottom Left
-    -0.5f,  0.5f, 0.0f  // Top Left      
+     0.5f,  0.5f, 0.0f,  1.0f, 0.0f, 0.0f, 
+     0.5f, -0.5f, 0.0f,  1.0f, 1.0f, 0.0f,
+    -0.5f, -0.5f, 0.0f,  0.0f, 0.0f, 1.0f,
+    -0.5f,  0.5f, 0.0f,  0.0f, 1.0f, 1.0f
 };
 
 GLuint hardcodedIndices[] =
@@ -59,49 +43,9 @@ GLuint hardcodedIndices[] =
     1, 2, 3
 };
 
-const GLchar *hardcodedVShader1 =
-"#version 330 core \n"
-"layout (location = 0) in vec3 position;\n"
-"void main()\n"
-"{\n"
-    "gl_Position = vec4(position.x, position.y, position.z, 1.0);\n"
-"}\n\0";
-const GLchar *hardcodedVShader2 =
-"#version 330 core \n"
-"layout (location = 0) in vec3 position;\n"
-"void main()\n"
-"{\n"
-    "gl_Position = vec4(position.x - 0.3, position.y, position.z, 2.0);\n"
-"}\n\0";
-
-const GLchar *hardcodedFShader1 =
-"#version 330 core \n"
-"out vec4 color;\n"
-"void main()\n"
-"{\n"
-    "color = vec4(1.0f, 0.5f, 0.2f, 1.0f);"
-"}\n\0";
-const GLchar *hardcodedFShader2 =
-"#version 330 core \n"
-"out vec4 color;\n"
-"void main()\n"
-"{\n"
-    "color = vec4(0.2f, 0.5f, 1.0f, 1.0f);"
-"}\n\0";
-
-const GLchar *hardcodedVShaders[2] = {
-    hardcodedVShader1,
-    hardcodedVShader2
-};
-
-const GLchar *hardcodedFShaders[2] = {
-    hardcodedFShader1,
-    hardcodedFShader2
-};
-
 struct RenderReferences {
     uint32 numObjects;
-    GLuint *shaderPrograms;
+    Shader *shaders;
     GLuint *VAOs;
     GLuint *VBOs;
     GLuint *EBOs;
@@ -165,58 +109,17 @@ gameLogic()
     }
 }
 
-void inline
-checkShaderCompilation(GLuint shader)
-{
-    GLint success;
-    GLchar infoLog[512];
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-    if(!success)
-    {
-        glGetShaderInfoLog(shader, 512, NULL, infoLog);
-        printf("Failed to compile shader:\n%s\n", infoLog);
-    }
-}
-
-void inline
-checkShaderProgramCompilation(GLuint program)
-{
-    GLint success;
-    GLchar infoLog[512];
-    glGetProgramiv(program, GL_LINK_STATUS, &success);
-    if(!success)
-    {
-        glGetShaderInfoLog(program, 512, NULL, infoLog);
-        printf("Failed to compile shader program:\n%s\n", infoLog);
-    }
-}
-
 void
 initShaders()
 {
-    rendRefs.shaderPrograms = (GLuint *) GlobalAllocator()->allocate(sizeof(GLuint) * rendRefs.numObjects, sizeof(GLuint));
+    rendRefs.shaders = (Shader *) GlobalAllocator()->allocate(sizeof(Shader) * rendRefs.numObjects, NULL);
     for(uint32 r = 0; r < rendRefs.numObjects; ++r)
     {
-        GLuint vertexShader;
-        vertexShader = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(vertexShader, 1, &hardcodedVShaders[r], NULL);
-        glCompileShader(vertexShader);
-        checkShaderCompilation(vertexShader);
-
-        GLuint fragmentShader;
-        fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fragmentShader, 1, &hardcodedFShaders[r], NULL);
-        glCompileShader(fragmentShader);
-        checkShaderCompilation(fragmentShader);
-
-        rendRefs.shaderPrograms[r] = glCreateProgram();
-        glAttachShader(rendRefs.shaderPrograms[r], vertexShader);
-        glAttachShader(rendRefs.shaderPrograms[r], fragmentShader);
-        glLinkProgram(rendRefs.shaderPrograms[r]);
-        checkShaderProgramCompilation(rendRefs.shaderPrograms[r]);
-        
-        glDeleteShader(vertexShader);
-        glDeleteShader(fragmentShader);
+        char vShaderName[FILENAME_MAX];
+        char fShaderName[FILENAME_MAX];
+        sprintf_s(vShaderName, "../data/vshader_%d.vs", r + 1);
+        sprintf_s(fShaderName, "../data/fshader_%d.fs", r + 1);
+        rendRefs.shaders[r] = Shader(vShaderName, fShaderName);
     }
 
 }
@@ -249,9 +152,11 @@ initObjects()
         // should  we normalize (cap between -1 and 1) data, space between consecutive attributes (stride),
         // offset to where data begins in buffer
         // NOTE(james): this call is also what bind the VBO to the VAO, so you can unbind that without issue
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid *) 0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid *) 0);
         // NOTE(james): parameter is location of vertAttrib
         glEnableVertexAttribArray(0);
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid *) (3 * sizeof(GLfloat)));
+        glEnableVertexAttribArray(1);
 
         // Unbind
         glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -269,7 +174,13 @@ render()
 
     for(uint32 r = 0; r < rendRefs.numObjects; ++r)
     {
-        glUseProgram(rendRefs.shaderPrograms[r]);
+        rendRefs.shaders[r].use();
+        
+        GLdouble timeVal = glfwGetTime();
+        GLdouble sinTime = (sin(timeVal)) + 0.5f;
+        GLint uniColorLoc = glGetUniformLocation(rendRefs.shaders[r].program, "uniColor");
+        glUniform4f(uniColorLoc, 0.0f, (GLfloat) sinTime, 0.0f, 1.0f);
+            
         glBindVertexArray(rendRefs.VAOs[r]);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);

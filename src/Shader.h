@@ -1,4 +1,4 @@
-#if !defined(WIN32_MAIN_H)
+#if !defined(SHADER_H)
 /* ========================================================================
    $File: $
    $Date: $
@@ -7,10 +7,15 @@
    $Notice: (C) Copyright 2015 by Extreme, Inc. All Rights Reserved. $
    ======================================================================== */
 
-#define WIN32_MAIN_H
-#define _HAS_EXCEPTIONS 0
-#include <assert.h>
+#define SHADER_H
 
-#define ASSERT assert
+#include <GL/glew.h>
+
+struct Shader
+{
+    GLuint program;
+    Shader(char *vertexPath, char *fragmentPath);
+    void use();
+};
 
 #endif
