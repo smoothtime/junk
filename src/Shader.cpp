@@ -78,9 +78,3 @@ Shader::Shader(char *vertexPath, char *fragmentPath)
     glDeleteShader(fShader);
 
 }
-
-void
-Shader::use()
-{
-    glUseProgram(this->program);
-}

@@ -1,78 +1,91 @@
-struct Vec3;
-
 struct Vec3
 {
     union {
         struct {
-            float x;
-            float y;
-            float z;
+            real32 x;
+            real32 y;
+            real32 z;
         };
-        float xyz[3];
-    };
-
-	Vec3() {}
-    Vec3(real32 x_, real32 y_, real32 z_) : x(x_), y(y_), z(z_) {}
-    Vec3(const Vec3& copy)
-    {
-        x = copy.x;
-        y = copy.y;
-        z = copy.z;
-    }
-
-    static void *operator new(size_t size)
-    {
-        // Mainly want to be constructing vectors
-        // with placement new with Allocator provided
-        // memory addresses, but if we need to allocate
-        // a vector on the fly, just make one on the global allocator
-        return GlobalAllocator()->allocate(size);
-        
-    }
-
-    static void operator delete(void *block)
-    {
-        GlobalAllocator()->deallocate(block);
-    }
-
-    Vec3& operator+=(const Vec3& rhs)
-    {
-        this->x += rhs.x;
-        this->y += rhs.y;
-        this->z += rhs.z;
-        return *this;
-    }
-
-    Vec3& operator-=(const Vec3& rhs)
-    {
-        this->x -= rhs.x;
-        this->y -= rhs.y;
-        this->z -= rhs.z;
-        return *this;
-    }
-                                            
+        real32 xyz[3];
+    };                                      
 };
 
 inline Vec3
-operator+(const Vec3 &lhs, const Vec3 &rhs)
+vec3(real32 x, real32 y, real32 z)
 {
-    return Vec3(lhs.x + rhs.x,
-                lhs.y + rhs.y,
-                lhs.z + rhs.z);
+    Vec3 result;
+    result.x = x;
+    result.y = y;
+    result.z = z;
+    return result;
+}
+
+Vec3& operator+=(Vec3& lhs, Vec3 rhs)
+{
+
+    lhs.x += rhs.x;
+    lhs.y += rhs.y;
+    lhs.z += rhs.z;
+    return lhs;
+}
+
+Vec3& operator-=(Vec3& lhs, Vec3 rhs)
+{
+    lhs.x -= rhs.x;
+    lhs.y -= rhs.y;
+    lhs.z -= rhs.z;
+    return lhs;
 }
 
 inline Vec3
-operator-(const Vec3 &lhs, const Vec3 &rhs)
+operator+(Vec3 lhs, Vec3 &rhs)
 {
-    return Vec3(lhs.x - rhs.x,
-                lhs.y - rhs.y,
-                lhs.z - rhs.z);
+    Vec3 result;
+    result.x = lhs.x + rhs.x;
+    result.y = lhs.y + rhs.y;
+    result.z = lhs.z + rhs.z;
+    return result;
 }
 
 inline Vec3
-operator*(const Vec3 &lhs, const real32 &scale)
-{   
-    return Vec3(lhs.x * scale,
-                lhs.y * scale,
-                lhs.z * scale);
+operator-(Vec3 lhs, Vec3 &rhs)
+{
+    Vec3 result;
+    result.x = lhs.x - rhs.x;
+    result.y = lhs.y - rhs.y;
+    result.z = lhs.z - rhs.z;
+    return result;
 }
+
+inline Vec3
+operator*(Vec3 lhs, real32 scale)
+{
+    Vec3 result;
+    result.x = lhs.x * scale;
+    result.y = lhs.y * scale;
+    result.z = lhs.z * scale;
+    return result;
+}
+
+inline Vec3&
+operator*=(Vec3& lhs, real32 scale)
+{
+    lhs.x *= scale;
+    lhs.y *= scale;
+    lhs.z *= scale;
+    return lhs;
+}
+
+struct Vertex
+{
+    Vec3 pos;
+    Vec3 color;
+    real32 texU;
+    real32 texV;
+};
+
+struct Vec4
+{
+    Vec3 v3;
+    real32 w;
+};

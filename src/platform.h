@@ -6,8 +6,31 @@
    $Creator: James Wells $
    $Notice: (C) Copyright 2015 by Extreme, Inc. All Rights Reserved. $
    ======================================================================== */
+//
+// NOTE(james): Compilers
+//
+    
+#if !defined(COMPILER_MSVC)
+#define COMPILER_MSVC 0
+#endif
+    
+#if !defined(COMPILER_LLVM)
+#define COMPILER_LLVM 0
+#endif
 
-#define PLATFORM_H
+#if !COMPILER_MSVC && !COMPILER_LLVM
+#if _MSC_VER
+#undef COMPILER_MSVC
+#define COMPILER_MSVC 1
+#else
+// TODO(james): add gcc or whatever
+#undef COMPILER_LLVM
+#define COMPILER_LLVM 1
+#endif
+#endif
+
+#include <assert.h>
+#include <math.h>
 #include <string>
 #include <fstream>
 #include <sstream>
@@ -29,9 +52,56 @@ typedef float real32;
 typedef double real64;
 typedef uintptr_t uptr;
 
+#define Kilobytes(Value) ((Value)*1024LL)
+#define Megabytes(Value) (Kilobytes(Value)*1024LL)
+#define Gigabytes(Value) (Megabytes(Value)*1024LL)
+#define Terabytes(Value) (Gigabytes(Value)*1024LL)
+
+#include "MemoryArena.h"
+
+
 typedef struct thread_context
 {
     int placeholder;
 } thread_context;
 
+#define ArrayCount(Array) (sizeof(Array) / sizeof((Array)[0]))
+
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
+typedef struct read_file
+{
+    uint64 size;
+    void *memory;
+} read_file;
+
+#define READ_RENDERABLE(functionName) read_file functionName(thread_context *thread, char *modelFile, char *shaderFile)
+typedef READ_RENDERABLE(platform_service_read_renderable);
+
+typedef struct GameMemory
+{
+    bool32 isSimulationInitialized;
+    bool32 isRendererInitialized;
+    uint64 permanentStorageSize;
+    uint64 transientStorageSize;
+    void * permStorage;
+    void * transStorage;
+
+    platform_service_read_renderable *platformServiceReadRenderable;
+} GameMemory;
+
+typedef struct GameInput
+{
+    bool32 wantsToTerminate;
+} GameInput;
+
+
+#define GAME_UPDATE(functionName) void functionName(thread_context *thread, GameMemory *memory, GameInput *input, real64 timeVal)
+typedef GAME_UPDATE(GameUpdate);
+
+#define GAME_RENDER(functionName) void functionName(thread_context *thread, GameMemory *memory, real64 timeVal)
+typedef GAME_RENDER(GameRender);
+
+#define PLATFORM_H
 #endif

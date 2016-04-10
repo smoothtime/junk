@@ -6,45 +6,38 @@
    $Creator: James Wells $
    $Notice: (C) Copyright 2015 by Extreme, Inc. All Rights Reserved. $
    ======================================================================== */
+#define OCTREE_MAX_DEPTH 8
 
-#include <vector>
-#define OCTREE_MAX_DEPTH 10
-struct Octree;
+struct entity_reference
+{
+    uint32 index;
+    entity_reference *next;
+};
+
+struct entity_block
+{
+    uint32 entityCount;
+    entity_reference entityReferences[1024];
+};
 
 struct Octree
 {
-    Octree() {}
-    Octree(Allocator *treeAllocator, Vec3 org, AABBox bounds, junk::JVector<Entity> *ents)
-    {
-        allocator = treeAllocator;
-        origin = org;
-        aabb = bounds;
-        children = 0;
-        entityCount = 0;
-        entities = ents;
-        new (&entityIndexes) junk::JVector<uint32>(4, treeAllocator);
-    }
     
-    Allocator *allocator;
     // Define size of (sub)space
     Vec3 origin;
     AABBox aabb;
 
-    Octree *children;
-    junk::JVector<Entity> *entities;
-    junk::JVector<uint32> entityIndexes;
-    //uint32 entityIndexes[4];
+    Octree *children[8];
+    entity_block *entityReferenceBlock;
     uint32 entityCount;
 
     bool isLeafNode();
-    void insert(uint32 ent_index);
-    void insert(uint32 ent_index, int32 depth);
-    void checkCollisions(uint32 ent_index, junk::JSet<uint32> &collisions);
-
-private:
-    uint8 whichOctant(const Vec3 &point);
+    void insert(Entity *entity, MemoryArena *memArena);
+    uint8 whichOctant(Vec3 point);
     uint8 whichChildren(AABBox bounds);
-    void insertToCollidedChildren(uint32 ent_index, int32 depth);
+    void insertToCollidedChildren(Entity *entity, MemoryArena *memArena);
+    void checkCollisions(Entity *entityArray, Entity *entity, uint32 *collisionIndices, uint32 numChecks);
+    void checkCollisions(Entity *entityArray, Entity *entity, uint32 *collisionIndices, uint32 numChecks, uint32 *collisionsSoFar);
 
 };
 

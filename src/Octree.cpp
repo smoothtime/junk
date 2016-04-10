@@ -7,97 +7,143 @@
    ======================================================================== */
 #include "Octree.h"
 
-bool
-Octree::isLeafNode()
+Octree *
+InitOctreeNode(AABBox bounds, MemoryArena *memArena)
 {
-    return children == 0;
+    Octree *result = PushStruct(memArena, Octree);
+    result->aabb = bounds;
+    result->origin = (bounds.minBound + bounds.maxBound) * 0.5f;
+    result->entityCount = 0;
+    return result;
 }
 
-void
-Octree::insert(uint32 ent_index)
+Octree *
+ConstructOctree(AABBox bounds, uint32 depth, MemoryArena *memArena)
 {
-    insert(ent_index, 0);
-}
-
-void
-Octree::insert(uint32 ent_index, int32 depth)
-{
-    Entity entity = (*entities)[ent_index];
-    if(isLeafNode())
+    Octree *node = InitOctreeNode(bounds, memArena);
+    if(depth)
     {
-        if(entityCount == 4 && depth < OCTREE_MAX_DEPTH)
+        for(uint32 child = 0;
+            child < 8;
+            ++child)
         {
-            // divide this box into another 8
-            allocator->allocateArray(8, this->children);
-            for(int i = 0; i < 8; i
-                ++)
-            {
-                bool32 signX = (i & 1);
-                bool32 signY = (i & 2);
-                bool32 signZ = (i & 4);
-                Vec3 minBound(signX ? origin.x : aabb._min.x,
-                              signY ? origin.x : aabb._min.y,
-                              signZ ? origin.z : aabb._min.z);
-                Vec3 maxBound(signX ? aabb._max.x : origin.x,
-                              signY ? aabb._max.y : origin.y,
-                              signZ ? aabb._max.z : origin.z);
-                Vec3 childOrg = minBound + ((maxBound - minBound) * 0.5);
-                new (&children[i]) Octree(allocator, childOrg, AABBox(minBound, maxBound), entities);
-            }
+            bool32 signX = (child & 1);
+            bool32 signY = (child & 2);
+            bool32 signZ = (child & 4);
+            Vec3 minBound = vec3(signX ? node->origin.x : node->aabb.minBound.x,
+                                 signY ? node->origin.x : node->aabb.minBound.y,
+                                 signZ ? node->origin.z : node->aabb.minBound.z);
+            Vec3 maxBound = vec3(signX ? node->aabb.maxBound.x : node->origin.x,
+                                 signY ? node->aabb.maxBound.y : node->origin.y,
+                                 signZ ? node->aabb.maxBound.z : node->origin.z);
+            AABBox childBounds = { minBound, maxBound };
             
-            // reinsert each entity into corresponding children
-            for(int32 i = 0; i < 4; ++i)
-            {
-                insertToCollidedChildren(entityIndexes[i], depth);
-            }
-            
-            // insert incoming entity into corresponding child
-            insertToCollidedChildren(ent_index, depth);
-            
-        }
-        else
-        {
-            // TODO(james): this will blow up once we reach max depth
-            // need a dynamically sized data structure or memory arena of ids
-            entityIndexes.push_back(ent_index);
+            node->children[child] = ConstructOctree(childBounds, depth - 1, memArena);
         }
     }
     else
     {
-        insertToCollidedChildren(ent_index, depth);
+        node->entityReferenceBlock = PushStruct(memArena, entity_block);
+    }
+    return node;
+}
+
+bool
+Octree::isLeafNode()
+{
+    return children[0] == 0;
+}
+
+void
+Octree::insert(Entity *entity, MemoryArena *memArena)
+{
+    if(isLeafNode())
+    {
+        uint32 hashIndex = entityHashFunction(entity);
+        entity_reference *existingReference = entityReferenceBlock->entityReferences + hashIndex;
+        if(existingReference->index == 0)
+        {
+            existingReference->index =  entity->entityIndex;
+            entityReferenceBlock->entityCount++;
+        }
+        else
+        {
+            // External chaining
+            while(existingReference->next)
+            {
+                existingReference = existingReference->next;
+            }
+            existingReference->next = PushStruct(memArena, entity_reference);
+            existingReference->next->index = entity->entityIndex;
+            existingReference->next->next = 0;
+        }
+    }
+    else
+    {
+        insertToCollidedChildren(entity, memArena);
     }
     entityCount++;
 }
 
+inline bool32
+alreadyCollided(uint32 *collisionIndices, uint32 numChecks, uint32 indexToCheck)
+{
+    for(uint32 i = 0; i < numChecks; ++i)
+    {
+        if(collisionIndices[i] == indexToCheck)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 void
-Octree::checkCollisions(uint32 ent_index, junk::JSet<uint32> &collisions)
+Octree::checkCollisions(Entity *entityArray, Entity* entityToCheck, uint32 *collisionIndices, uint32 numChecks)
+{
+    uint32 collisionsSoFar = 0;
+    checkCollisions(entityArray, entityToCheck, collisionIndices, numChecks, &collisionsSoFar);
+}
+    
+void
+Octree::checkCollisions(Entity *entityArray, Entity* entity, uint32 *collisionIndices, uint32 numChecks, uint32 *collisionsSoFar)
 {
     if(isLeafNode())
     {
-        for(int32 i = 0; i < entityIndexes.size(); ++i)
+        for(uint32 i = 0; i < ArrayCount(entityReferenceBlock->entityReferences); ++i)
         {
-            if(doBoundsCollide((*entities)[entityIndexes[i]].aabb, (*entities)[ent_index].aabb))
-            {
-                collisions.push_back(entityIndexes[i]);
-            }
+            entity_reference *toCheck = entityReferenceBlock->entityReferences + i;
+            do {
+                if(toCheck->index)
+                {
+
+                    if(doBoundsCollide(entity->aabb, entityArray[toCheck->index].aabb)
+                       && *collisionsSoFar < numChecks
+                       && !alreadyCollided(collisionIndices, numChecks, toCheck->index)) //don't want to collide with same entity stretching across multiple children
+                    { 
+                        *(collisionIndices + *collisionsSoFar) = toCheck->index;
+                        (*collisionsSoFar)++;
+                    }
+                }
+                toCheck = toCheck->next;
+            } while(toCheck);
         }
     }
     else
     {
-        uint8 toCheck = whichChildren((*entities)[ent_index].aabb);
+        uint8 collidedChildren = whichChildren(entity->aabb);
         for(int32 i = 0; i < 8; ++i)
         {
-            if((toCheck >> i) & 1)
+            if((collidedChildren >> i) & 1)
             {
-                children[i].checkCollisions(ent_index, collisions);
+                children[i]->checkCollisions(entityArray, entity, collisionIndices, numChecks, collisionsSoFar);
             }
         }
-            
     }
 }
 
 uint8
-Octree::whichOctant(const Vec3 &point)
+Octree::whichOctant(Vec3 point)
 {
     // children go form back bottom left to front top right
     uint8 octant = 0;
@@ -121,8 +167,8 @@ uint8
 Octree::whichChildren(AABBox bounds)
 {
     uint8 childOctants;
-    uint8 childOctantMin = whichOctant(bounds._min);
-    uint8 childOctantMax = whichOctant(bounds._max);
+    uint8 childOctantMin = whichOctant(bounds.minBound);
+    uint8 childOctantMax = whichOctant(bounds.maxBound);
     if(childOctantMin == childOctantMax)
     {
         childOctants = 1 << childOctantMin;
@@ -133,7 +179,7 @@ Octree::whichChildren(AABBox bounds)
         // crosses a bound, need to check against all children
         for(int32 i = 0; i < 8; i++)
         {
-            if(doBoundsCollide(children[i].aabb, bounds))
+            if(doBoundsCollide(children[i]->aabb, bounds))
             {
                 childOctants = childOctants | (1 << i);
             }
@@ -145,14 +191,14 @@ Octree::whichChildren(AABBox bounds)
 }
 
 inline void
-Octree::insertToCollidedChildren(uint32 ent_index, int32 depth)
+Octree::insertToCollidedChildren(Entity *entity, MemoryArena *memArena)
 {
-    uint8 toInsert = whichChildren((*entities)[ent_index].aabb);
+    uint8 toInsert = whichChildren(entity->aabb);
     for(int32 i = 0; i < 8; ++i)
     {
         if((toInsert >> i) & 1)
         {
-            children[i].insert(ent_index, depth + 1);
+            children[i]->insert(entity, memArena);
         }
     }
 }
