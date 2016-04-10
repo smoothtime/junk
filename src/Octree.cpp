@@ -30,10 +30,10 @@ ConstructOctree(AABBox bounds, uint32 depth, MemoryArena *memArena)
             bool32 signX = (child & 1);
             bool32 signY = (child & 2);
             bool32 signZ = (child & 4);
-            Vec3 minBound = vec3(signX ? node->origin.x : node->aabb.minBound.x,
+            glm::vec3 minBound = glm::vec3(signX ? node->origin.x : node->aabb.minBound.x,
                                  signY ? node->origin.x : node->aabb.minBound.y,
                                  signZ ? node->origin.z : node->aabb.minBound.z);
-            Vec3 maxBound = vec3(signX ? node->aabb.maxBound.x : node->origin.x,
+            glm::vec3 maxBound = glm::vec3(signX ? node->aabb.maxBound.x : node->origin.x,
                                  signY ? node->aabb.maxBound.y : node->origin.y,
                                  signZ ? node->aabb.maxBound.z : node->origin.z);
             AABBox childBounds = { minBound, maxBound };
@@ -143,7 +143,7 @@ Octree::checkCollisions(Entity *entityArray, Entity* entity, uint32 *collisionIn
 }
 
 uint8
-Octree::whichOctant(Vec3 point)
+Octree::whichOctant(glm::vec3 point)
 {
     // children go form back bottom left to front top right
     uint8 octant = 0;

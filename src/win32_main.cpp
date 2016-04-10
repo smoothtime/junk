@@ -32,10 +32,43 @@ key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
     }
 }
 
-READ_RENDERABLE(psReadRenderable)
+FREE_FILE(psFreeFile)
+{
+    if(memory)
+    {
+        VirtualFree(memory, 0, MEM_RELEASE);
+    }
+}
+
+READ_ENTIRE_FILE(psReadEntireFile)
 {
     // I'll do this later
     read_file result = {};
+    HANDLE fileHandle = CreateFileA(filePath, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
+    if(fileHandle != INVALID_HANDLE_VALUE)
+    {
+        LARGE_INTEGER fileSize;
+        if(GetFileSizeEx(fileHandle, &fileSize))
+        {
+            uint32 fileSize32 = (uint32) fileSize.QuadPart;
+            result.memory = VirtualAlloc(0, fileSize32, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
+            if(result.memory)
+            {
+                DWORD bytesRead;
+                if(ReadFile(fileHandle, result.memory, fileSize32, &bytesRead, 0)
+                   && fileSize32 == bytesRead)
+                {
+                    result.size = bytesRead;
+                }
+                else
+                {
+                    psFreeFile(thread, result.memory);
+                    result.memory = 0;
+                }
+            }
+        }
+        CloseHandle(fileHandle);
+    }
     return result;
 }
 
@@ -91,7 +124,7 @@ WinMain(HINSTANCE instance,
     GameMemory memory = {};
     memory.isSimulationInitialized = false;
     memory.isRendererInitialized = false;
-    memory.platformServiceReadRenderable = psReadRenderable;
+    memory.platformServiceReadRenderable = psReadEntireFile;
     memory.permanentStorageSize = Megabytes(256);
     memory.transientStorageSize = Gigabytes(1);
     uint64 totalSize = memory.permanentStorageSize + memory.transientStorageSize;
