@@ -24,7 +24,7 @@ struct Octree
 {
     
     // Define size of (sub)space
-    Vec3 origin;
+    glm::vec3 origin;
     AABBox aabb;
 
     Octree *children[8];
@@ -33,7 +33,7 @@ struct Octree
 
     bool isLeafNode();
     void insert(Entity *entity, MemoryArena *memArena);
-    uint8 whichOctant(Vec3 point);
+    uint8 whichOctant(glm::vec3 point);
     uint8 whichChildren(AABBox bounds);
     void insertToCollidedChildren(Entity *entity, MemoryArena *memArena);
     void checkCollisions(Entity *entityArray, Entity *entity, uint32 *collisionIndices, uint32 numChecks);

@@ -7,8 +7,6 @@
    $Notice: (C) Copyright 2015 by Extreme, Inc. All Rights Reserved. $
    ======================================================================== */
 #include "platform.h"
-#include "Vec3.h"
-#include "matrix.h"
 #include "Entity.h"
 #include "Octree.cpp"
 #include "glRender.h"
@@ -25,19 +23,10 @@ struct Frustum
 
 struct Camera
 {
-    Vec3 position;
+    glm::vec3 position;
     Frustum frustum;
-    mat4 viewMatrix;
+    glm::mat4 viewMatrix;
 };
-
-inline mat4
-createPerspectiveMatrix(Camera *camera)
-{
-    mat4 result = perspectiveMatrix(camera->frustum.n, camera->frustum.f,
-                                    camera->frustum.r, camera->frustum.l,
-                                    camera->frustum.t, camera->frustum.b);    
-    return result;
-}
 
 struct GameState
 {
@@ -46,9 +35,37 @@ struct GameState
     uint32 entityCount;
     Octree *staticEntityTree;
     Camera camera;
-    Vec3 testDelta;
+    glm::vec3 testDelta;
+    Model *models;
+    uint32 maxModels;    
     RenderReferences *rendRefs;
 };
+
+void
+LoadModel(thread_context *thread, GameState *gameState, platformServiceReadEntireFile *psRF, char *relPath)
+{
+    read_file loadedModel = psRF(thread, relPath);
+    // Parse file
+    Model model = {};
+
+    // Hacking to test
+    model.numVerts = 4;
+    model.vertices[0].pos = glm::vec3( 0.5f,  0.5f,  0.0f);
+    model.vertices[1].pos = glm::vec3( 0.5f, -0.5f,  0.0f);
+    model.vertices[2].pos = glm::vec3(-0.5f, -0.5f,  0.0f);
+    model.vertices[3].pos = glm::vec3(-0.5f,  0.5f,  0.0f);
+    model.vertices[0].texCoords = glm::vec2(1.0f, 1.0f);
+    model.vertices[1].texCoords = glm::vec2(1.0f, 0.0f);
+    model.vertices[2].texCoords = glm::vec2(0.0f, 0.0f);
+    model.vertices[3].texCoords = glm::vec2(0.0f, 1.0f);
+
+    initShader(gameState->rendRefs, "../data/vshader_1.vs", "../data/fshader_1.fs");
+    initTexture(gameState->rendRefs, "../data/wall.jpg");
+    initObject(gameState->rendRefs, &model);
+    // </hacking>
+
+    // Add to models stored in GameState
+}
 
 #define GAME_H
 #endif

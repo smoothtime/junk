@@ -56,8 +56,11 @@ typedef uintptr_t uptr;
 #define Megabytes(Value) (Kilobytes(Value)*1024LL)
 #define Gigabytes(Value) (Megabytes(Value)*1024LL)
 #define Terabytes(Value) (Gigabytes(Value)*1024LL)
-
+#include <GLM\glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include "MemoryArena.h"
+#include "Model.h"
 
 
 typedef struct thread_context
@@ -76,8 +79,11 @@ typedef struct read_file
     void *memory;
 } read_file;
 
-#define READ_RENDERABLE(functionName) read_file functionName(thread_context *thread, char *modelFile, char *shaderFile)
-typedef READ_RENDERABLE(platform_service_read_renderable);
+#define FREE_FILE(functionName) void functionName(thread_context *thread, void* memory)
+typedef FREE_FILE(platformServiceFreeFile);
+
+#define READ_ENTIRE_FILE(functionName) read_file functionName(thread_context *thread, char *filePath)
+typedef READ_ENTIRE_FILE(platformServiceReadEntireFile);
 
 typedef struct GameMemory
 {
@@ -88,7 +94,7 @@ typedef struct GameMemory
     void * permStorage;
     void * transStorage;
 
-    platform_service_read_renderable *platformServiceReadRenderable;
+    platformServiceReadEntireFile *platformServiceReadFile;
 } GameMemory;
 
 typedef struct GameInput

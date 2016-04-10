@@ -9,15 +9,15 @@
 
 struct AABBox
 {    
-    Vec3 minBound;
-    Vec3 maxBound;
+    glm::vec3 minBound;
+    glm::vec3 maxBound;
 };
 
 struct Entity
 {   
     uint32 entityIndex;
     AABBox aabb;
-    //Vertex *verts;
+    uint32 modelIndex;
 };
 
 bool32
@@ -36,9 +36,10 @@ entityHashFunction(Entity *entity)
     uint32 hashValue;
 
     // take into account origin of object
-    Vec3 origin = (entity->aabb.minBound + entity->aabb.maxBound) * 0.5;
+    glm::vec3 origin = (entity->aabb.minBound + entity->aabb.maxBound);
+    origin = origin * 0.5f;
     // and size
-    Vec3 size = entity->aabb.maxBound - entity->aabb.minBound;
+    glm::vec3 size = entity->aabb.maxBound - entity->aabb.minBound;
     
     hashValue = (uint32) (ceil(origin.x * 10 + origin.y * 5 + origin.z * 3
                                   - size.x * 10 - origin.y * 5 + origin.z * 3)
