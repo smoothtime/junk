@@ -14,13 +14,6 @@
 #include <cassert>
 #include "radixsort.h"
 
-#include "Allocator.h"
-#include "MallocAllocator.h"
-#include "GlobalAllocator.h"
-
-// TODO(james): get rid of these
-#include "Vec3.cpp"
-#include "matrix.h"
 #include <GLFW/glfw3.h>
 
 void
@@ -124,7 +117,7 @@ WinMain(HINSTANCE instance,
     GameMemory memory = {};
     memory.isSimulationInitialized = false;
     memory.isRendererInitialized = false;
-    memory.platformServiceReadRenderable = psReadEntireFile;
+    memory.platformServiceReadFile = psReadEntireFile;
     memory.permanentStorageSize = Megabytes(256);
     memory.transientStorageSize = Gigabytes(1);
     uint64 totalSize = memory.permanentStorageSize + memory.transientStorageSize;

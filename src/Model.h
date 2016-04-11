@@ -10,7 +10,7 @@
 struct Vertex
 {
     glm::vec3 pos;
-    glm::vec3 colors;
+//    glm::vec3 colors;
     glm::vec2 texCoords;    
 };
 
@@ -18,6 +18,8 @@ struct Model
 {
     uint32 numVerts;
     Vertex *vertices;
+    uint32 numIndices;
+    uint32 *indices;
     char *vShaderPath;
     char *fShaderPath;
 };

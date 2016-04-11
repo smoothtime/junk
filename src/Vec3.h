@@ -75,17 +75,3 @@ operator*=(Vec3& lhs, real32 scale)
     lhs.z *= scale;
     return lhs;
 }
-
-struct Vertex
-{
-    Vec3 pos;
-    Vec3 color;
-    real32 texU;
-    real32 texV;
-};
-
-struct Vec4
-{
-    Vec3 v3;
-    real32 w;
-};

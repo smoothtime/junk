@@ -7,6 +7,49 @@
    ======================================================================== */
 #include "Octree.h"
 
+#if 0
+void test()
+{
+    
+    // Populate the simulation with some static objects
+    glm::vec3 v1 = glm::vec3(-500.0f, -500.0f, -500.0f);
+    glm::vec3 v2 = glm::vec3( 500.0f,  500.0f,  500.0f);
+    glm::vec3 origin = (v1 + v2) * 5.0f;
+    AABBox box1 = { v1, v2 };
+    gameState->staticEntityTree = ConstructOctree(box1, 1, memArena);
+    // testing insertion
+    gameState->staticEntities[1] = {1, { glm::vec3(-500.0f, -500.0f, -500.0f), glm::vec3(300.0f, 300.0f, 300.0f) } };
+    gameState->staticEntities[2] = {2, { glm::vec3(-450.0f, -450.0f, -450.0f), glm::vec3(-350.0f, -350.0f, -350.0f) } };
+    gameState->staticEntities[3] = {3, { glm::vec3(-500.0f, -500.0f, -500.0f), glm::vec3(-300.0f, -300.0f, -300.0f) } };
+    gameState->staticEntities[4] = {4, { glm::vec3(-500.0f, -500.0f, -500.0f), glm::vec3(-300.0f, -300.0f, -300.0f) } };
+    gameState->staticEntities[5] = {5, { glm::vec3(-500.0f, -500.0f, -500.0f), glm::vec3(-300.0f, -300.0f, -300.0f) } };
+    gameState->staticEntities[6] = {6, { glm::vec3(5.0f, 5.0f, 5.0f), glm::vec3(30.0f, 30.0f, 30.0f) } };       
+    for(uint32 i = 1; i < 7; ++i)
+    {
+        gameState->staticEntityTree->insert(gameState->staticEntities + i, memArena);
+    }
+    gameState->entityCount = 6;
+
+    char str[256];
+    uint32 collisionIndices[6] = { 0 };
+    Entity test = { 0, { glm::vec3(-10.0f, -10.0f, -10.0f), glm::vec3(10.0f, 10.0f, 10.0f) } };
+    gameState->staticEntityTree->checkCollisions(gameState->staticEntities, &test, collisionIndices, ArrayCount(collisionIndices));
+    for(uint32 i = 0; i < ArrayCount(collisionIndices) && collisionIndices[i]; ++i)
+    {
+        sprintf_s(str, "Collided with static entity of index %d\n", collisionIndices[i]);
+        // TODO(james): expose logging in platform layer
+        // memory->log(str);
+    }
+
+    if(gameState->camera.position.x > 1.0f || gameState->camera.position.x < -1.0f)
+    {
+        gameState->testDelta *= -1.0f; 
+    }
+        
+    gameState->camera.viewMatrix = glm::translate(gameState->camera.viewMatrix, glm::vec3(0.0f));
+}
+#endif
+
 Octree *
 InitOctreeNode(AABBox bounds, MemoryArena *memArena)
 {
