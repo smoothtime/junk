@@ -7,6 +7,7 @@
    ======================================================================== */
 #include "game.h"
 
+extern "C"
 GAME_UPDATE(gameUpdate)
 {
     GameState *gameState = (GameState *) memory->permStorage;

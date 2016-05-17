@@ -25,6 +25,20 @@ key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
     }
 }
 
+FREE_FILE(psFreeFile)
+{
+    if(memory)
+    {
+        free(memory);
+    }
+}
+
+READ_ENTIRE_FILE(psReadEntireFile)
+{
+    // do this later
+    read_file result = {};
+    return result;
+}
 
 int32
 main(int32 argc, char **argv)
@@ -51,18 +65,38 @@ main(int32 argc, char **argv)
     glfwSetKeyCallback(window, key_callback);
     glViewport(0, 0, 800, 600);
 
-    OSXDyLib gameCode = osxLoadGameCode("/Users/jwells/Development/cpp/junk/build/libgame.so");
-    if(gameCode.gameUpdate)
-    {
-        printf("loaded right\n");
-    }
-    else
-    {
-        printf("something's fucked\n"); 
-    }
+    const char *dyLibPath = "libgame.so";
+    OSXDyLib gameCode = osxLoadGameCode(dyLibPath);
+    thread_context thread = {};
+    GameMemory memory = {};
+    memory.isInitialized = false;
+    memory.platformServiceReadFile = psReadEntireFile;
+    memory.permanentStorageSize = Megabytes(256);
+    memory.transientStorageSize = Gigabytes(1);
+    uint64 totalSize = memory.permanentStorageSize + memory.transientStorageSize;
+
+    void *allTheDamnedMemory = malloc(totalSize);
+    printf("allocated the memory\n");
+    memory.permStorage = allTheDamnedMemory;
+    memory.transStorage = ((uint8 *)allTheDamnedMemory + memory.permanentStorageSize);
+
+    real64 timeVal;
+    
     while(!glfwWindowShouldClose(window))
     {
+        bool32 gameCodeReloaded = false;
+        if(hasDyLibUpdatedSinceLastRead(gameCode, dyLibPath))
+        {
+            gameCode = osxLoadGameCode(dyLibPath);
+            gameCodeReloaded = true;
+        }
         glfwPollEvents();
+        timeVal = glfwGetTime();
+        GameInput inputForFrame = { false };
+        if(gameCode.gameUpdate)
+        {
+            gameCode.gameUpdate(&thread, &memory, &inputForFrame, timeVal, gameCodeReloaded);
+        }
         glfwSwapBuffers(window);
     }
 

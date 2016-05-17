@@ -12,6 +12,7 @@ struct OSXDyLib
 {
     GameUpdate *gameUpdate;
     bool32 isValid;
+    int32 lastWritten;
 };
 
 OSXDyLib
@@ -24,18 +25,25 @@ osxLoadGameCode(const char *srcDyLib)
     if(result.gameUpdate)
     {
         result.isValid = true;
+        struct stat attr;
+        stat(srcDyLib, &attr);
+        result.lastWritten = attr.st_mtime;
     }
     return result;
 }
 
 bool32
-CompareFileTime(const char *path1, const char *path2)
+hasDyLibUpdatedSinceLastRead(OSXDyLib lib, const char *path)
 {
-    struct stat attr1, attr2;
-    if(stat(path1, &attr1) != 0 ||
-       stat(path2, &attr2) != 0)
+    struct stat attr;
+    if(stat(path, &attr) == 0)
+    {
         return false;
-    return attr1.st_mtime == attr2.st_mtime;
+    }
+    else
+    {
+        return attr.st_mtime > lib.lastWritten;
+    }
 }
 
 #define OSX_MAIN_H

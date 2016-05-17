@@ -57,7 +57,7 @@ loadModel(thread_context *thread, GameState *gameState, platformServiceReadEntir
     const uint16 CHUNK_MAPPING_COORDINATES = 0x4140;
     const uint16 CHUNK_MATERIAL_BLOCK      = 0xafff;
 
-    Model *model = gameState->models + gameState->numModels;
+/*    Model *model = gameState->models + gameState->numModels;
     read_file loadedModel = psRF(thread, relPath);
     // Parse file
     uint16 *chunkId;
@@ -141,9 +141,9 @@ loadModel(thread_context *thread, GameState *gameState, platformServiceReadEntir
 
     gameState->numModels++;
     return model;
-
+*/
     // Hacking to test
-    /*Model model = {};
+    
     Model *model = gameState->models + gameState->numModels;
     model->numVerts = 4;
     model->vertices = PushArray(&gameState->memArena, 4, Vertex);
@@ -167,7 +167,7 @@ loadModel(thread_context *thread, GameState *gameState, platformServiceReadEntir
     // </hacking>
 
     gameState->numModels++;
-    */
+    return model;
     
 }
 
