@@ -10,9 +10,9 @@
 GAME_UPDATE(gameUpdate)
 {
     GameState *gameState = (GameState *) memory->permStorage;
-    if(!memory->isSimulationInitialized)
+    if(!memory->isInitialized)
     {
-        memory->isSimulationInitialized = true;
+        memory->isInitialized = true;
         gameState->camera = { glm::vec3(0.0f, 0.0f, 0.0f),
                               { -0.1f, -0100.0f, -8.0f, 8.0f, 6.0f, -6.0f},
                               glm::mat4(1.0f)
@@ -46,8 +46,20 @@ GAME_UPDATE(gameUpdate)
         // pointer chase both to the Model and then to all the elements
         gameState->maxModels = 128;
         gameState->models = PushArray(memArena, gameState->maxModels, Model);
-        loadModel(thread, gameState, memory->platformServiceReadFile, "../data/model1.dae");
+        Model *model = loadModel(thread, gameState, memory->platformServiceReadFile, "../data/cube.3ds");
+        initShader(gameState->rendRefs, "../data/vshader_1.vs", "../data/fshader_1.fs");
+        initTexture(gameState->rendRefs, "../data/wall.jpg");
+        initObject(gameState->rendRefs, model);
+        gameState->rendRefs->numObjects++;
         
+    }
+    else if(hack)
+    {
+        glewExperimental = GL_TRUE;
+        if(glewInit() != GLEW_OK)
+        {
+            printf("Failed to init GLEW");
+        }
     }
     else
     {   
@@ -55,7 +67,7 @@ GAME_UPDATE(gameUpdate)
         // Render
         RenderReferences *rr = gameState->rendRefs;        
         
-        glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
+        glClearColor(0.5f, 0.5f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
         glm::mat4 glmModel;
@@ -94,9 +106,4 @@ GAME_UPDATE(gameUpdate)
             glUseProgram(0);
         }    
     }   
-}
-
-GAME_RENDER(gameRender)
-{
-
 }

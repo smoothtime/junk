@@ -10,7 +10,7 @@ REM 64-bit build
 del *.pdb > NUL 2> NUL
 REM Optimization switches /O2
 echo WAITING FOR PDB > lock.tmp
-cl %CommonCompilerFlags% ..\src\game.cpp -Fmgame.map -LD /link -incremental:no -opt:ref %OpenGLLinkerFlags%  -PDB:game_%random%.pdb -EXPORT:gameUpdate -EXPORT:gameRender
+cl %CommonCompilerFlags% ..\src\game.cpp -Fmgame.map -LD /link -incremental:no -opt:ref %OpenGLLinkerFlags%  -PDB:game_%random%.pdb -EXPORT:gameUpdate
 del lock.tmp
 REM James migrate from GLFW so you don't pair the rendering with the platform
 cl %CommonCompilerFlags%  ..\src\win32_main.cpp -Fmwin32_main.map /link %CommonLinkerFlags% %OpenGLLinkerFlags%

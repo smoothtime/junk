@@ -21,7 +21,6 @@ struct Win32GameDLL
     // NOTE(james): Either of the callbacks can be 0!  You must
     // check before calling.
     GameUpdate *gameUpdate;
-    GameRender *gameRender;
 
     bool32 isValid;
 };
@@ -55,16 +54,14 @@ win32LoadGameCode(char *srcDLL, char *tmpDLL, char *lock)
         if(result.gameCodeDLL)
         {
             result.gameUpdate = (GameUpdate *) GetProcAddress(result.gameCodeDLL, "gameUpdate");
-            result.gameRender = (GameRender *) GetProcAddress(result.gameCodeDLL, "gameRender");
 
-            result.isValid = (result.gameUpdate && result.gameRender);
+            result.isValid = result.gameUpdate && 1;
         }
     }
 
     if(!result.isValid)
     {
         result.gameUpdate = 0;
-        result.gameRender = 0;
     }
 
     return result;
@@ -81,7 +78,6 @@ win32UnloadGameCode(Win32GameDLL *gameCode)
 
     gameCode->isValid = false;
     gameCode->gameUpdate = 0;
-    gameCode->gameRender = 0;
 }
 #define WIN32_MAIN_H
 #endif

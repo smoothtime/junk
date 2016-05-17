@@ -52,6 +52,8 @@ typedef float real32;
 typedef double real64;
 typedef uintptr_t uptr;
 
+#define internal static
+
 #define Kilobytes(Value) ((Value)*1024LL)
 #define Megabytes(Value) (Kilobytes(Value)*1024LL)
 #define Gigabytes(Value) (Megabytes(Value)*1024LL)
@@ -60,6 +62,7 @@ typedef uintptr_t uptr;
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include "MemoryArena.h"
+#include "utils.h"
 #include "Model.h"
 
 
@@ -87,8 +90,7 @@ typedef READ_ENTIRE_FILE(platformServiceReadEntireFile);
 
 typedef struct GameMemory
 {
-    bool32 isSimulationInitialized;
-    bool32 isRendererInitialized;
+    bool32 isInitialized;
     uint64 permanentStorageSize;
     uint64 transientStorageSize;
     void * permStorage;
@@ -103,11 +105,8 @@ typedef struct GameInput
 } GameInput;
 
 
-#define GAME_UPDATE(functionName) void functionName(thread_context *thread, GameMemory *memory, GameInput *input, real64 timeVal)
+#define GAME_UPDATE(functionName) void functionName(thread_context *thread, GameMemory *memory, GameInput *input, real64 timeVal, bool32 hack)
 typedef GAME_UPDATE(GameUpdate);
-
-#define GAME_RENDER(functionName) void functionName(thread_context *thread, GameMemory *memory, real64 timeVal)
-typedef GAME_RENDER(GameRender);
 
 #define PLATFORM_H
 #endif

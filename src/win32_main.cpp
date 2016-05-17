@@ -115,8 +115,7 @@ WinMain(HINSTANCE instance,
 
     thread_context thread = {};
     GameMemory memory = {};
-    memory.isSimulationInitialized = false;
-    memory.isRendererInitialized = false;
+    memory.isInitialized = false;
     memory.platformServiceReadFile = psReadEntireFile;
     memory.permanentStorageSize = Megabytes(256);
     memory.transientStorageSize = Gigabytes(1);
@@ -141,19 +140,19 @@ WinMain(HINSTANCE instance,
     while(!glfwWindowShouldClose(window))
     {
         FILETIME newDLLWriteTime = win32GetLastWriteTime(gameDLLPath);
+        bool32 gameCodeReloaded = false;
         if(CompareFileTime(&newDLLWriteTime, &gameDLL.dllLastWriteTime) != 0)
         {
             win32UnloadGameCode(&gameDLL);
             gameDLL = win32LoadGameCode(gameDLLPath, tempDLLPath, dllLockFilePath);
-            break;
+            gameCodeReloaded = true;
         }
         glfwPollEvents();
         timeVal = glfwGetTime();
         GameInput inputForFrame = { false };
-        if(gameDLL.gameUpdate && gameDLL.gameRender)
+        if(gameDLL.gameUpdate)
         {
-            gameDLL.gameUpdate(&thread, &memory, &inputForFrame, timeVal);
-            gameDLL.gameRender(&thread, &memory, timeVal);
+            gameDLL.gameUpdate(&thread, &memory, &inputForFrame, timeVal, gameCodeReloaded);
         }
         glfwSwapBuffers(window);
     }
