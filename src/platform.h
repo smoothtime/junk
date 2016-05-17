@@ -58,7 +58,13 @@ typedef uintptr_t uptr;
 #define Megabytes(Value) (Kilobytes(Value)*1024LL)
 #define Gigabytes(Value) (Megabytes(Value)*1024LL)
 #define Terabytes(Value) (Gigabytes(Value)*1024LL)
+
+#if COMPILER_MSVC
 #include <GLM\glm.hpp>
+#elseif COMPILER_LLVM
+#include <GLM/glm.hpp>
+#endif
+
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include "MemoryArena.h"
@@ -85,7 +91,7 @@ typedef struct read_file
 #define FREE_FILE(functionName) void functionName(thread_context *thread, void* memory)
 typedef FREE_FILE(platformServiceFreeFile);
 
-#define READ_ENTIRE_FILE(functionName) read_file functionName(thread_context *thread, char *filePath)
+#define READ_ENTIRE_FILE(functionName) read_file functionName(thread_context *thread, const char *filePath)
 typedef READ_ENTIRE_FILE(platformServiceReadEntireFile);
 
 typedef struct GameMemory

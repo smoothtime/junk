@@ -24,7 +24,7 @@ struct RenderReferences {
 };
 
 void
-initShader(RenderReferences *rendRefs, char *vShaderPath, char *fShaderPath)
+initShader(RenderReferences *rendRefs, const char *vShaderPath, const char *fShaderPath)
 {
     assert(rendRefs->numObjects <  rendRefs->maxObjects -1);
     rendRefs->shaders[rendRefs->numObjects] = Shader(vShaderPath,  fShaderPath);
@@ -32,7 +32,7 @@ initShader(RenderReferences *rendRefs, char *vShaderPath, char *fShaderPath)
 
 // TODO(james): make the texture properties passed in
 void
-initTexture(RenderReferences *rendRefs, char *texturePath)
+initTexture(RenderReferences *rendRefs, const char *texturePath)
 {
     int32 x, y, n;
     uint8 *imageData= stbi_load(texturePath, &x, &y, &n, 0);

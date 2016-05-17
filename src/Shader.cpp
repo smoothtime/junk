@@ -32,7 +32,7 @@ checkShaderProgramCompilation(GLuint program)
 }
 
 #include "Shader.h"
-Shader::Shader(char *vertexPath, char *fragmentPath)
+Shader::Shader(const char *vertexPath, const char *fragmentPath)
 {
     std::string vCode;
     std::string fCode;

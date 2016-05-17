@@ -10,7 +10,7 @@
 struct Shader
 {
     GLuint program;
-    Shader(char *vertexPath, char *fragmentPath);
+    Shader(const char *vertexPath, const char *fragmentPath);
 };
 #define SHADER_H
 #endif

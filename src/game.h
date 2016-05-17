@@ -46,7 +46,7 @@ struct GameState
 };
 
 Model *
-loadModel(thread_context *thread, GameState *gameState, platformServiceReadEntireFile *psRF, char *relPath)
+loadModel(thread_context *thread, GameState *gameState, platformServiceReadEntireFile *psRF, const char *relPath)
 {
     const uint16 CHUNK_MAIN                = 0x4d4d;
     const uint16 CHUNK_3D_EDITOR           = 0x3d3d;
