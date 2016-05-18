@@ -37,6 +37,16 @@ READ_ENTIRE_FILE(psReadEntireFile)
 {
     // do this later
     read_file result = {};
+    FILE *entireFile = fopen(filePath, "rb");
+    if(entireFile)
+    {
+        size_t fileSize;
+        fseek(entireFile, 0L, SEEK_END);
+        fileSize = ftell(entireFile);
+        rewind(entireFile);
+        result.memory = (void *) malloc(fileSize);
+        result.size = fread(result.memory, sizeof(uint8), fileSize, entireFile);
+    }
     return result;
 }
 

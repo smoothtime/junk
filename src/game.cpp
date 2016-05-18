@@ -47,7 +47,7 @@ GAME_UPDATE(gameUpdate)
         // pointer chase both to the Model and then to all the elements
         gameState->maxModels = 128;
         gameState->models = PushArray(memArena, gameState->maxModels, Model);
-        Model *model = loadModel(thread, gameState, memory->platformServiceReadFile, "../data/plane.3ds");
+        Model *model = loadModel(thread, gameState, memory->platformServiceReadFile, "../data/cube.3ds");
         initShader(gameState->rendRefs, "../data/vshader_1.vs", "../data/fshader_1.fs");
         initTexture(gameState->rendRefs, "../data/wall.jpg");
         initObject(gameState->rendRefs, model);
@@ -68,7 +68,7 @@ GAME_UPDATE(gameUpdate)
         // Render
         RenderReferences *rr = gameState->rendRefs;        
         
-        glClearColor(0.5f, 0.5f, 1.0f, 1.0f);
+        glClearColor(0.6f, 0.6f, 0.6f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
         glm::mat4 glmModel;
@@ -76,11 +76,11 @@ GAME_UPDATE(gameUpdate)
         glm::mat4 glmProjection;
 
         GLfloat sinTime = (GLfloat)(sin(timeVal) / 2.0f );
-        glmModel = glm::rotate(glmModel, sinTime, glm::vec3(1.0f, 0.0f, 0.0f));
+        glmModel = glm::rotate(glmModel, sinTime, glm::vec3(0.0f, 1.0f, 0.0f));
 #if TRAP_HACK
         glmView = glm::translate(glmView, glm::vec3(0.0f, 0.0f, -1.25f));
 #else
-        glmView = glm::translate(glmView, glm::vec3(1.0f, -3.5f, -9.25f));
+        glmView = glm::translate(glmView, glm::vec3(0.0f, 0.0f, -1.25f));
 #endif
         glmProjection = glm::perspective(45.0f, (GLfloat)800 / (GLfloat) 600, 0.1f, 100.0f);
     

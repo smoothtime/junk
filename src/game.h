@@ -79,9 +79,6 @@ loadModel(thread_context *thread, GameState *gameState, platformServiceReadEntir
     model->indices[3] = 1;
     model->indices[4] = 2;
     model->indices[5] = 3;
-
-    gameState->numModels++;
-    return model;
     
     // </hacking>
 #else
@@ -124,9 +121,9 @@ loadModel(thread_context *thread, GameState *gameState, platformServiceReadEntir
                 model->vertices = PushArray(&gameState->memArena, model->numVerts, Vertex);
                 for(int32 i = 0; i < *count; ++i)
                 {
-                    model->vertices[i].pos = glm::vec3( *(real32 *)readP + 0,
-                                                        *(real32 *)readP + 1 * sizeof(real32),
-                                                        *(real32 *)readP + 2 * sizeof(real32)
+                    model->vertices[i].pos = glm::vec3( *((real32 *)readP + 0),
+                                                        *((real32 *)readP + 1),
+                                                        *((real32 *)readP + 2)
                                                       );
                     readP += 3 * sizeof(real32);
                 }
@@ -166,11 +163,20 @@ loadModel(thread_context *thread, GameState *gameState, platformServiceReadEntir
                 readP += (*chunkLength - 6); // -6 for the header we've read already
         }
     }
-
-    gameState->numModels++;
-    return model;
 #endif
-    
+    gameState->numModels++;
+    for(uint32 v = 0; v < model->numVerts; ++v)
+    {
+        printf("v%d: %f, %f, %f\n", v, model->vertices[v].pos.x,
+               model->vertices[v].pos.y,
+               model->vertices[v].pos.z);
+    }
+    for(uint32 in = 0; in < model->numIndices; ++in)
+    {
+        printf("%d ", model->indices[in]);
+    }
+    printf("\n");
+    return model;
 }
 
 #define GAME_H
