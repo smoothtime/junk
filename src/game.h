@@ -56,8 +56,36 @@ loadModel(thread_context *thread, GameState *gameState, platformServiceReadEntir
     const uint16 CHUNK_FACE_LIST           = 0x4120;
     const uint16 CHUNK_MAPPING_COORDINATES = 0x4140;
     const uint16 CHUNK_MATERIAL_BLOCK      = 0xafff;
+#define TRAP_HACK 0
+#if TRAP_HACK
+    // Hacking to test
+    
+    Model *model = gameState->models + gameState->numModels;
+    model->numVerts = 4;
+    model->vertices = PushArray(&gameState->memArena, 4, Vertex);
+    model->vertices[0].pos = glm::vec3( 1.0f,  0.5f,  0.0f);
+    model->vertices[1].pos = glm::vec3( 0.5f, -0.5f,  0.0f);
+    model->vertices[2].pos = glm::vec3(-0.5f, -0.5f,  0.0f);
+    model->vertices[3].pos = glm::vec3(-1.0f,  0.5f,  0.0f);
+    model->vertices[0].texCoords = glm::vec2(1.5f, 1.0f);
+    model->vertices[1].texCoords = glm::vec2(1.0f, 0.0f);
+    model->vertices[2].texCoords = glm::vec2(0.0f, 0.0f);
+    model->vertices[3].texCoords = glm::vec2(-0.5f, 1.0f);
+    model->numIndices = 6;
+    model->indices = PushArray(&gameState->memArena, 6, uint32);
+    model->indices[0] = 0;
+    model->indices[1] = 1;
+    model->indices[2] = 3;
+    model->indices[3] = 1;
+    model->indices[4] = 2;
+    model->indices[5] = 3;
 
-/*    Model *model = gameState->models + gameState->numModels;
+    gameState->numModels++;
+    return model;
+    
+    // </hacking>
+#else
+    Model *model = gameState->models + gameState->numModels;
     read_file loadedModel = psRF(thread, relPath);
     // Parse file
     uint16 *chunkId;
@@ -92,7 +120,7 @@ loadModel(thread_context *thread, GameState *gameState, platformServiceReadEntir
             {
                 count = (uint16 *)readP;
                 readP += sizeof(uint16);
-                model->numVerts = *((uint32 *)count);
+                model->numVerts = (uint32) *count;
                 model->vertices = PushArray(&gameState->memArena, model->numVerts, Vertex);
                 for(int32 i = 0; i < *count; ++i)
                 {
@@ -111,9 +139,9 @@ loadModel(thread_context *thread, GameState *gameState, platformServiceReadEntir
                 model->indices = PushArray(&gameState->memArena, model->numIndices, uint32);
                 for(uint32 i = 0; i < model->numIndices; i+=3)
                 {
-                    model->indices[i + 0] = (uint32)*(uint16 *)readP;
-                    model->indices[i + 1] = (uint32)*(uint16 *)readP + 1;
-                    model->indices[i + 2] = (uint32)*(uint16 *)readP + 2;
+                    model->indices[i + 0] = (uint32)*((uint16 *)readP);
+                    model->indices[i + 1] = (uint32)*((uint16 *)readP + 1);
+                    model->indices[i + 2] = (uint32)*((uint16 *)readP + 2);
                     // pass a not important face flag
                     faceFlags = (uint16 *) readP;
                     readP += 4 * sizeof(uint16);
@@ -141,33 +169,7 @@ loadModel(thread_context *thread, GameState *gameState, platformServiceReadEntir
 
     gameState->numModels++;
     return model;
-*/
-    // Hacking to test
-    
-    Model *model = gameState->models + gameState->numModels;
-    model->numVerts = 4;
-    model->vertices = PushArray(&gameState->memArena, 4, Vertex);
-    model->vertices[0].pos = glm::vec3( 1.0f,  0.5f,  0.0f);
-    model->vertices[1].pos = glm::vec3( 0.5f, -0.5f,  0.0f);
-    model->vertices[2].pos = glm::vec3(-0.5f, -0.5f,  0.0f);
-    model->vertices[3].pos = glm::vec3(-1.0f,  0.5f,  0.0f);
-    model->vertices[0].texCoords = glm::vec2(1.5f, 1.0f);
-    model->vertices[1].texCoords = glm::vec2(1.0f, 0.0f);
-    model->vertices[2].texCoords = glm::vec2(0.0f, 0.0f);
-    model->vertices[3].texCoords = glm::vec2(-0.5f, 1.0f);
-    model->numIndices = 6;
-    model->indices = PushArray(&gameState->memArena, 6, uint32);
-    model->indices[0] = 0;
-    model->indices[1] = 1;
-    model->indices[2] = 3;
-    model->indices[3] = 1;
-    model->indices[4] = 2;
-    model->indices[5] = 3;
-    
-    // </hacking>
-
-    gameState->numModels++;
-    return model;
+#endif
     
 }
 

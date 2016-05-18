@@ -59,9 +59,9 @@ typedef uintptr_t uptr;
 #define Gigabytes(Value) (Megabytes(Value)*1024LL)
 #define Terabytes(Value) (Gigabytes(Value)*1024LL)
 
-#if COMPILER_MSVC
+#ifdef COMPILER_MSVC
 #include <GLM\glm.hpp>
-#elseif COMPILER_LLVM
+#else if COMPILER_LLVM
 #include <GLM/glm.hpp>
 #endif
 
