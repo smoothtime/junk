@@ -16,12 +16,76 @@
 
 #include <GLFW/glfw3.h>
 
+GameInput inputLastFrame;
+GameInput inputForFrame;
+
 void
 key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
 {
     if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
     {
+        inputForFrame.wantsToTerminate = true;
         glfwSetWindowShouldClose(window, GL_TRUE);
+    }
+    if(key == GLFW_KEY_W)
+    {
+        if(action == GLFW_PRESS)
+            inputForFrame.w = true;
+        else if(action == GLFW_RELEASE)
+            inputForFrame.w = false;
+    }
+    if(key == GLFW_KEY_A)
+    {
+        if(action == GLFW_PRESS)
+            inputForFrame.a = true;
+        else if(action == GLFW_RELEASE)
+            inputForFrame.a = false;
+    }
+    if(key == GLFW_KEY_S)
+    {
+        if(action == GLFW_PRESS)
+            inputForFrame.s = true;
+        else if(action == GLFW_RELEASE)
+            inputForFrame.s = false;
+    }
+    if(key == GLFW_KEY_D)
+    {
+        if(action == GLFW_PRESS)
+            inputForFrame.d = true;
+        else if(action == GLFW_RELEASE)
+            inputForFrame.d = false;
+    }
+     
+}
+
+bool mouseInit = true;
+void mouse_callback(GLFWwindow *window, real64 xpos, real64 ypos)
+{
+    OutputDebugStringA("Hit mouse cb\n");
+    if(mouseInit)
+    {
+        inputForFrame.mouseX = (real32) xpos;
+        inputForFrame.mouseY = (real32) ypos;
+        inputForFrame.mouseDeltaX = 0;
+        inputForFrame.mouseDeltaY = 0;
+        mouseInit = false;
+        return;
+    }
+
+    inputForFrame.mouseX = (real32) xpos;
+    inputForFrame.mouseY = (real32) ypos;
+    inputForFrame.mouseDeltaX = (real32) xpos - inputLastFrame.mouseX;
+    inputForFrame.mouseDeltaY = inputLastFrame.mouseY - (real32) ypos;
+    
+}
+
+bool32 focused = false;
+void focus_callback(GLFWwindow *window, int32 focus)
+{
+    focused = focus;
+    if(focused)
+    {
+        glfwSetCursorPos(window, 400, 300);
     }
 }
 
@@ -111,6 +175,9 @@ WinMain(HINSTANCE instance,
     }
     glfwMakeContextCurrent(window);
     glfwSetKeyCallback(window, key_callback);
+    glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetWindowFocusCallback(window, focus_callback);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glViewport(0, 0, 800, 600);
 
     thread_context thread = {};
@@ -135,7 +202,8 @@ WinMain(HINSTANCE instance,
     memory.permStorage = allTheDamnedMemory;
     memory.transStorage = ((uint8 *)allTheDamnedMemory + memory.permanentStorageSize);
 
-    real64 timeVal;
+    real64 lastTime = 0;
+    real64 deltaTime;
 
     while(!glfwWindowShouldClose(window))
     {
@@ -148,12 +216,22 @@ WinMain(HINSTANCE instance,
             gameCodeReloaded = true;
         }
         glfwPollEvents();
-        timeVal = glfwGetTime();
-        GameInput inputForFrame = { false };
+        real64 time = glfwGetTime();
+        deltaTime  = time - lastTime;
+        lastTime = time;
+
+        char output[256];
+        _snprintf_s(output, sizeof(output),
+                    "MouseX for frame: %f.\n MouseY for frame: %f.\n DeltaX for frame: %f.\n DeltaY for frame: %f.\n", inputForFrame.mouseX, inputForFrame.mouseY, inputForFrame.mouseDeltaX, inputForFrame.mouseDeltaY);
+        OutputDebugStringA(output);
         if(gameDLL.gameUpdate)
         {
-            gameDLL.gameUpdate(&thread, &memory, &inputForFrame, timeVal, gameCodeReloaded);
+            gameDLL.gameUpdate(&thread, &memory, &inputForFrame, deltaTime, gameCodeReloaded);
         }
+        inputLastFrame = inputForFrame;
+        inputForFrame.mouseDeltaX = 0;
+        inputForFrame.mouseDeltaY = 0;
+
         glfwSwapBuffers(window);
     }
 

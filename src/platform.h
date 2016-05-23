@@ -51,6 +51,7 @@ typedef uint64_t uint64;
 typedef float real32;
 typedef double real64;
 typedef uintptr_t uptr;
+#define PI32 3.14159265
 
 #define internal static
 
@@ -61,15 +62,17 @@ typedef uintptr_t uptr;
 
 #if COMPILER_MSVC
 #include <GLM\glm.hpp>
-#elseif COMPILER_LLVM
+#else
+#if COMPILER_LLVM
 #include <GLM/glm.hpp>
+#endif
 #endif
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include "MemoryArena.h"
-#include "utils.h"
 #include "Model.h"
+#include "utils.h"
 
 
 typedef struct thread_context
@@ -108,10 +111,13 @@ typedef struct GameMemory
 typedef struct GameInput
 {
     bool32 wantsToTerminate;
+    bool32 w, a, s, d;
+    real32 mouseX, mouseY;
+    real32 mouseDeltaX, mouseDeltaY;
 } GameInput;
 
 
-#define GAME_UPDATE(functionName) void functionName(thread_context *thread, GameMemory *memory, GameInput *input, real64 timeVal, bool32 hack)
+#define GAME_UPDATE(functionName) void functionName(thread_context *thread, GameMemory *memory, GameInput *input, real64 deltaTime, bool32 hack)
 typedef GAME_UPDATE(GameUpdate);
 
 #define PLATFORM_H

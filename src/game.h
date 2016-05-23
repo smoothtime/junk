@@ -11,6 +11,8 @@
 #include "Octree.cpp"
 #include "glRender.h"
 
+glm::vec3 WORLD_UP_VECTOR = glm::vec3(0.0f, 1.0f, 0.0f);
+
 struct Frustum
 {
     real32 n;
@@ -24,9 +26,28 @@ struct Frustum
 struct Camera
 {
     glm::vec3 position;
-    Frustum frustum;
+    glm::vec3 direction;
+    glm::vec3 up;
+    glm::vec3 right;
     glm::mat4 viewMatrix;
+    real32 pitch;
+    real32 yaw;
 };
+
+Camera
+initCamera(glm::vec3 pos, glm::vec3 dir, glm::vec3 worldUp, glm::mat4 view)
+{
+    Camera result = {};
+    result.position = pos;
+    result.direction = glm::normalize(dir);
+    glm::vec3 tar = pos + dir;
+    result.right = glm::normalize(glm::cross(worldUp, glm::normalize(pos - tar)));;
+    result.up = glm::normalize(glm::cross(glm::normalize(pos - tar), result.right));
+    result.viewMatrix = view;
+    result.pitch = 0.0f;
+    result.yaw = PI32 / -2.0f;
+    return result;
+}
 
 struct GameState
 {
@@ -35,14 +56,12 @@ struct GameState
     uint32 entityCount;
     Octree *staticEntityTree;
     Camera camera;
-    glm::vec3 testDelta;
     uint32 numModels;
     Model *models;
     uint32 maxModels;    
     RenderReferences *rendRefs;
 
-    GLfloat *vertices;
-    GLuint *indices;
+    real64 deltaTime;
 };
 
 Model *
@@ -56,32 +75,7 @@ loadModel(thread_context *thread, GameState *gameState, platformServiceReadEntir
     const uint16 CHUNK_FACE_LIST           = 0x4120;
     const uint16 CHUNK_MAPPING_COORDINATES = 0x4140;
     const uint16 CHUNK_MATERIAL_BLOCK      = 0xafff;
-#define TRAP_HACK 0
-#if TRAP_HACK
-    // Hacking to test
-    
-    Model *model = gameState->models + gameState->numModels;
-    model->numVerts = 4;
-    model->vertices = PushArray(&gameState->memArena, 4, Vertex);
-    model->vertices[0].pos = glm::vec3( 1.0f,  0.5f,  0.0f);
-    model->vertices[1].pos = glm::vec3( 0.5f, -0.5f,  0.0f);
-    model->vertices[2].pos = glm::vec3(-0.5f, -0.5f,  0.0f);
-    model->vertices[3].pos = glm::vec3(-1.0f,  0.5f,  0.0f);
-    model->vertices[0].texCoords = glm::vec2(1.5f, 1.0f);
-    model->vertices[1].texCoords = glm::vec2(1.0f, 0.0f);
-    model->vertices[2].texCoords = glm::vec2(0.0f, 0.0f);
-    model->vertices[3].texCoords = glm::vec2(-0.5f, 1.0f);
-    model->numIndices = 6;
-    model->indices = PushArray(&gameState->memArena, 6, uint32);
-    model->indices[0] = 0;
-    model->indices[1] = 1;
-    model->indices[2] = 3;
-    model->indices[3] = 1;
-    model->indices[4] = 2;
-    model->indices[5] = 3;
-    
-    // </hacking>
-#else
+
     Model *model = gameState->models + gameState->numModels;
     read_file loadedModel = psRF(thread, relPath);
     // Parse file
@@ -101,18 +95,22 @@ loadModel(thread_context *thread, GameState *gameState, platformServiceReadEntir
             case CHUNK_MAIN:
                 // read children
                 break;
+                
             case CHUNK_3D_EDITOR:
                 // read children
                 break;
+                
             case CHUNK_OBJECT_BLOCK:
             {
                 JString *name = readString(&gameState->memArena, readP);
                 readP += name->size;
                 break;
             }
+            
             case CHUNK_TRIANGULAR_MESH:
                 // read children
                 break;
+                
             case CHUNK_VERTICES_LIST:
             {
                 count = (uint16 *)readP;
@@ -129,10 +127,11 @@ loadModel(thread_context *thread, GameState *gameState, platformServiceReadEntir
                 }
                 break;
             }
+            
             case CHUNK_FACE_LIST:
                 count = (uint16 *)readP;
                 readP += sizeof(uint16);
-                model->numIndices = *(uint32 *)count * 3;
+                model->numIndices = (uint32)(*count * 3);
                 model->indices = PushArray(&gameState->memArena, model->numIndices, uint32);
                 for(uint32 i = 0; i < model->numIndices; i+=3)
                 {
@@ -144,26 +143,29 @@ loadModel(thread_context *thread, GameState *gameState, platformServiceReadEntir
                     readP += 4 * sizeof(uint16);
                 }
                 break;
+                 
             case CHUNK_MAPPING_COORDINATES:
                 count = (uint16 *)readP;
                 readP += sizeof(uint16);
                 for(uint32 i = 0; i < model->numVerts; ++i)
                 {
-                    model->vertices[i].texCoords = glm::vec2( *(real32 *)readP + 0,
-                                                              *(real32 *)readP + 1 * sizeof(real32)
-                                                            );
+                    model->vertices[i].texCoords = glm::vec2( *((real32 *)readP + 0),
+                                                              *((real32 *)readP + 1)
+                                                           );
                     readP += 2 * sizeof(real32);
                 }
                 break;
+                
             case CHUNK_MATERIAL_BLOCK:
                 // postponed until we get all the verts displaying correctly
                 readP += (*chunkLength - 6); // -6 for the header we've read already
                 break;
+                
             default:
                 readP += (*chunkLength - 6); // -6 for the header we've read already
         }
     }
-#endif
+
     gameState->numModels++;
     for(uint32 v = 0; v < model->numVerts; ++v)
     {
