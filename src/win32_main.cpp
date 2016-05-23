@@ -83,10 +83,6 @@ bool32 focused = false;
 void focus_callback(GLFWwindow *window, int32 focus)
 {
     focused = focus;
-    if(focused)
-    {
-        glfwSetCursorPos(window, 400, 300);
-    }
 }
 
 FREE_FILE(psFreeFile)

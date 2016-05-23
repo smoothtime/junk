@@ -74,7 +74,8 @@ GAME_UPDATE(gameUpdate)
         gameState->deltaTime = deltaTime;
         real32 sensitivity = 0.001f;
         real32 camSpeed = 10.0f * (real32) deltaTime;
-        
+
+        //Update camera
         Camera *cam = &gameState->camera;
         if(input->mouseDeltaX || input->mouseDeltaY)
         {

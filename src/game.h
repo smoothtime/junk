@@ -10,6 +10,7 @@
 #include "Entity.h"
 #include "Octree.cpp"
 #include "glRender.h"
+#include "BucketArray.cpp"
 
 glm::vec3 WORLD_UP_VECTOR = glm::vec3(0.0f, 1.0f, 0.0f);
 
