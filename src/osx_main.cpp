@@ -16,13 +16,71 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+GameInput inputLastFrame;
+GameInput inputForFrame;
+
 void
 key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
 {
-    if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+        if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
     {
+        inputForFrame.wantsToTerminate = true;
         glfwSetWindowShouldClose(window, GL_TRUE);
     }
+    if(key == GLFW_KEY_W)
+    {
+        if(action == GLFW_PRESS)
+            inputForFrame.w = true;
+        else if(action == GLFW_RELEASE)
+            inputForFrame.w = false;
+    }
+    if(key == GLFW_KEY_A)
+    {
+        if(action == GLFW_PRESS)
+            inputForFrame.a = true;
+        else if(action == GLFW_RELEASE)
+            inputForFrame.a = false;
+    }
+    if(key == GLFW_KEY_S)
+    {
+        if(action == GLFW_PRESS)
+            inputForFrame.s = true;
+        else if(action == GLFW_RELEASE)
+            inputForFrame.s = false;
+    }
+    if(key == GLFW_KEY_D)
+    {
+        if(action == GLFW_PRESS)
+            inputForFrame.d = true;
+        else if(action == GLFW_RELEASE)
+            inputForFrame.d = false;
+    }
+}
+
+bool mouseInit = true;
+void mouse_callback(GLFWwindow *window, real64 xpos, real64 ypos)
+{
+    if(mouseInit)
+    {
+        inputForFrame.mouseX = (real32) xpos;
+        inputForFrame.mouseY = (real32) ypos;
+        inputForFrame.mouseDeltaX = 0;
+        inputForFrame.mouseDeltaY = 0;
+        mouseInit = false;
+        return;
+    }
+
+    inputForFrame.mouseX = (real32) xpos;
+    inputForFrame.mouseY = (real32) ypos;
+    inputForFrame.mouseDeltaX = (real32) xpos - inputLastFrame.mouseX;
+    inputForFrame.mouseDeltaY = inputLastFrame.mouseY - (real32) ypos;
+    
+}
+
+bool32 focused = false;
+void focus_callback(GLFWwindow *window, int32 focus)
+{
+    focused = focus;
 }
 
 FREE_FILE(psFreeFile)
@@ -53,6 +111,8 @@ READ_ENTIRE_FILE(psReadEntireFile)
 int32
 main(int32 argc, char **argv)
 {
+    uint32 windowWidth = 200;
+    uint32 windowHeight = 150;
     printf("welcome\n");
     if(!glfwInit())
     {
@@ -64,7 +124,7 @@ main(int32 argc, char **argv)
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
-    GLFWwindow* window = glfwCreateWindow(800, 600, "Junk", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(windowWidth, windowHeight, "Junk", nullptr, nullptr);
     if(window == nullptr)
     {
         printf("Failed to create window via GLFW\n");
@@ -73,7 +133,10 @@ main(int32 argc, char **argv)
     }
     glfwMakeContextCurrent(window);
     glfwSetKeyCallback(window, key_callback);
-    glViewport(0, 0, 800, 600);
+    glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetWindowFocusCallback(window, focus_callback);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glViewport(0, 0, windowWidth, windowHeight);
 
     const char *dyLibPath = "libgame.so";
     OSXDyLib gameCode = osxLoadGameCode(dyLibPath);
@@ -90,7 +153,8 @@ main(int32 argc, char **argv)
     memory.permStorage = allTheDamnedMemory;
     memory.transStorage = ((uint8 *)allTheDamnedMemory + memory.permanentStorageSize);
 
-    real64 timeVal;
+    real64 lastTime;
+    real64 deltaTime;
     
     while(!glfwWindowShouldClose(window))
     {
@@ -101,12 +165,16 @@ main(int32 argc, char **argv)
             gameCodeReloaded = true;
         }
         glfwPollEvents();
-        timeVal = glfwGetTime();
-        GameInput inputForFrame = { false };
+        real64 time = glfwGetTime();
+        deltaTime  = time - lastTime;
+        lastTime = time;
         if(gameCode.gameUpdate)
         {
-            gameCode.gameUpdate(&thread, &memory, &inputForFrame, timeVal, gameCodeReloaded);
+            gameCode.gameUpdate(&thread, &memory, &inputForFrame, deltaTime, gameCodeReloaded);
         }
+        inputLastFrame = inputForFrame;
+        inputForFrame.mouseDeltaX = 0;
+        inputForFrame.mouseDeltaY = 0;
         glfwSwapBuffers(window);
     }
 
