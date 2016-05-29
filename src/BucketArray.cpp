@@ -9,7 +9,7 @@
 #include "BucketArray.h"
 
 template <class T>
-BucketArray BucketArray<T>::initBucketArray(uint32 elementSize, uint32 numElems, uint32 numBuckets, MemoryArena *arena)
+BucketArray<T> BucketArray<T>::initBucketArray(uint32 elementSize, uint32 numElems, uint32 numBuckets, MemoryArena *arena)
 {
     elemSize = elementSize;
     elemCount = numElems;

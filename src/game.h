@@ -10,6 +10,7 @@
 #include "Entity.h"
 #include "Octree.cpp"
 #include "glRender.h"
+#include "GeneralAllocator.cpp"
 #include "BucketArray.cpp"
 
 glm::vec3 WORLD_UP_VECTOR = glm::vec3(0.0f, 1.0f, 0.0f);
@@ -53,6 +54,7 @@ initCamera(glm::vec3 pos, glm::vec3 dir, glm::vec3 worldUp, glm::mat4 view)
 struct GameState
 {
     MemoryArena memArena;
+    GeneralAllocator *assetAlctr;
     Entity staticEntities[10000];
     uint32 entityCount;
     Octree *staticEntityTree;
@@ -117,7 +119,7 @@ loadModel(thread_context *thread, GameState *gameState, platformServiceReadEntir
                 count = (uint16 *)readP;
                 readP += sizeof(uint16);
                 model->numVerts = (uint32) *count;
-                model->vertices = PushArray(&gameState->memArena, model->numVerts, Vertex);
+                model->vertices = (Vertex *) gameState->assetAlctr->alloc(sizeof(Vertex) * model->numVerts);
                 for(int32 i = 0; i < *count; ++i)
                 {
                     model->vertices[i].pos = glm::vec3( *((real32 *)readP + 0),
@@ -133,7 +135,7 @@ loadModel(thread_context *thread, GameState *gameState, platformServiceReadEntir
                 count = (uint16 *)readP;
                 readP += sizeof(uint16);
                 model->numIndices = (uint32)(*count * 3);
-                model->indices = PushArray(&gameState->memArena, model->numIndices, uint32);
+                model->indices = (uint32 *) gameState->assetAlctr->alloc(sizeof(uint32) * model->numIndices);
                 for(uint32 i = 0; i < model->numIndices; i+=3)
                 {
                     model->indices[i + 0] = (uint32)*((uint16 *)readP);

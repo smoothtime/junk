@@ -24,6 +24,7 @@ GAME_UPDATE(gameUpdate)
         initializeArena(memArena,
                         memory->permanentStorageSize - sizeof(GameState),
                         (uint8 *)memory->permStorage + sizeof(GameState));
+        gameState->assetAlctr = initGeneralAllocator(memArena, Megabytes(5));
 
 
         // Initialize Rendering part
@@ -33,21 +34,23 @@ GAME_UPDATE(gameUpdate)
             printf("Failed to init GLEW");
         }
 
-        gameState->rendRefs = PushStruct(memArena, RenderReferences);
+        gameState->rendRefs = (RenderReferences *) gameState->assetAlctr->alloc(sizeof(RenderReferences));
+        
         RenderReferences *rr = gameState->rendRefs;
         rr->maxObjects = 256;
-        rr->shaders = PushArray(memArena, rr->maxObjects, Shader);
-        rr->textures = PushArray(memArena, rr->maxObjects, GLuint);
-        rr->VAOs = PushArray(memArena, rr->maxObjects, GLuint);
-        rr->VBOs = PushArray(memArena, rr->maxObjects, GLuint);
-        rr->EBOs = PushArray(memArena, rr->maxObjects, GLuint);
-        rr->modelMatrices = PushArray(memArena, rr->maxObjects, glm::mat4);
+        rr->shaders = (Shader *) gameState->assetAlctr->alloc(sizeof(Shader) * rr->maxObjects);
+        rr->textures = (GLuint *) gameState->assetAlctr->alloc(sizeof(GLuint) * rr->maxObjects);
+        GLuint *wtf = (GLuint *) gameState->assetAlctr->alloc(sizeof(GLuint) * rr->maxObjects);
+        rr->VAOs = wtf;
+        rr->VBOs = (GLuint *) gameState->assetAlctr->alloc(sizeof(GLuint) * rr->maxObjects);
+        rr->EBOs = (GLuint *) gameState->assetAlctr->alloc(sizeof(GLuint) * rr->maxObjects);
+        rr->modelMatrices = (glm::mat4 *) gameState->assetAlctr->alloc(sizeof(glm::mat4) * rr->maxObjects);
         rr->numObjects = 0;
 
         // TODO(james): find out a good way to lay out memory so you don't have to
         // pointer chase both to the Model and then to all the elements
         gameState->maxModels = 128;
-        gameState->models = PushArray(memArena, gameState->maxModels, Model);
+        gameState->models = (Model *) gameState->assetAlctr->alloc(sizeof(Model) * gameState->maxModels);
         Model *model = loadModel(thread, gameState, memory->platformServiceReadFile, "../data/test.3ds");
         initShader(gameState->rendRefs, "../data/vshader_1.vs", "../data/fshader_1.fs");
         initTexture(gameState->rendRefs, "../data/wall.jpg");
