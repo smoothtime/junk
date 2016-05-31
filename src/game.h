@@ -7,9 +7,10 @@
    $Notice: (C) Copyright 2015 by Extreme, Inc. All Rights Reserved. $
    ======================================================================== */
 #include "platform.h"
-#include "Entity.h"
-#include "Octree.cpp"
+#include "Model.h"
 #include "glRender.h"
+#include "Entity.cpp"
+#include "Octree.cpp"
 #include "GeneralAllocator.cpp"
 #include "BucketArray.cpp"
 
@@ -31,13 +32,12 @@ struct Camera
     glm::vec3 direction;
     glm::vec3 up;
     glm::vec3 right;
-    glm::mat4 viewMatrix;
     real32 pitch;
     real32 yaw;
 };
 
 Camera
-initCamera(glm::vec3 pos, glm::vec3 dir, glm::vec3 worldUp, glm::mat4 view)
+initCamera(glm::vec3 pos, glm::vec3 dir, glm::vec3 worldUp)
 {
     Camera result = {};
     result.position = pos;
@@ -45,7 +45,6 @@ initCamera(glm::vec3 pos, glm::vec3 dir, glm::vec3 worldUp, glm::mat4 view)
     glm::vec3 tar = pos + dir;
     result.right = glm::normalize(glm::cross(worldUp, glm::normalize(pos - tar)));;
     result.up = glm::normalize(glm::cross(glm::normalize(pos - tar), result.right));
-    result.viewMatrix = view;
     result.pitch = 0.0f;
     result.yaw = PI32 / -2.0f;
     return result;

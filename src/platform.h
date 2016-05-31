@@ -70,8 +70,8 @@ typedef uintptr_t uptr;
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/rotate_vector.hpp>
 #include "MemoryArena.h"
-#include "Model.h"
 #include "utils.h"
 
 
@@ -111,13 +111,14 @@ typedef struct GameMemory
 typedef struct GameInput
 {
     bool32 wantsToTerminate;
-    bool32 w, a, s, d;
+    bool32 w, a, s, d, space, leftClick, newLeftClick, rightClick, newRightClick;
     real32 mouseX, mouseY;
     real32 mouseDeltaX, mouseDeltaY;
+    uint32 resX, resY;
 } GameInput;
 
 
-#define GAME_UPDATE(functionName) void functionName(thread_context *thread, GameMemory *memory, GameInput *input, real64 deltaTime, bool32 hack)
+#define GAME_UPDATE(functionName) void functionName(thread_context *thread, GameMemory *memory, GameInput *input, real64 deltaTime, bool32 reloadExtensions)
 typedef GAME_UPDATE(GameUpdate);
 
 #define PLATFORM_H

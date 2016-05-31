@@ -55,6 +55,13 @@ key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
         else if(action == GLFW_RELEASE)
             inputForFrame.d = false;
     }
+    if(key == GLFW_KEY_SPACE)
+    {
+        if(action == GLFW_PRESS)
+            inputForFrame.space = true;
+        else if(action == GLFW_RELEASE)
+            inputForFrame.space = false;
+    }
      
 }
 
@@ -77,6 +84,37 @@ void mouse_callback(GLFWwindow *window, real64 xpos, real64 ypos)
     inputForFrame.mouseDeltaX = (real32) xpos - inputLastFrame.mouseX;
     inputForFrame.mouseDeltaY = inputLastFrame.mouseY - (real32) ypos;
     
+}
+
+void
+mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
+{
+    if(button == GLFW_MOUSE_BUTTON_LEFT)
+    {
+        if(action == GLFW_PRESS)
+        {
+            inputForFrame.leftClick = true;
+            inputForFrame.newLeftClick = true;
+        }
+        else if(action == GLFW_RELEASE)
+        {
+            inputForFrame.leftClick = false;
+        }
+    }
+    else if(button == GLFW_MOUSE_BUTTON_RIGHT)
+    {
+        if(action == GLFW_PRESS)
+        {
+            inputForFrame.rightClick = true;
+            inputForFrame.newRightClick = true;
+        }
+        else if(action == GLFW_RELEASE)
+        {
+            inputForFrame.rightClick = false;
+        }
+    }
+
+
 }
 
 bool32 focused = false;
@@ -163,7 +201,9 @@ WinMain(HINSTANCE instance,
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
-    GLFWwindow* window = glfwCreateWindow(800, 600, "Junk", nullptr, nullptr);
+    uint32 HARDCODED_RES_X = 800;
+    UINT32 HARDCODED_RES_Y = 600;
+    GLFWwindow* window = glfwCreateWindow(HARDCODED_RES_X, HARDCODED_RES_Y, "Junk", nullptr, nullptr);
     if(window == nullptr)
     {
         printf("Failed to create window via GLFW");
@@ -172,9 +212,10 @@ WinMain(HINSTANCE instance,
     glfwMakeContextCurrent(window);
     glfwSetKeyCallback(window, key_callback);
     glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetWindowFocusCallback(window, focus_callback);
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    glViewport(0, 0, 800, 600);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    glViewport(0, 0, HARDCODED_RES_X, HARDCODED_RES_Y);
 
     thread_context thread = {};
     GameMemory memory = {};
@@ -212,6 +253,9 @@ WinMain(HINSTANCE instance,
             gameCodeReloaded = true;
         }
         glfwPollEvents();
+        inputForFrame.resX = HARDCODED_RES_X;
+        inputForFrame.resY = HARDCODED_RES_Y;
+        
         real64 time = glfwGetTime();
         deltaTime  = time - lastTime;
         lastTime = time;
@@ -227,6 +271,8 @@ WinMain(HINSTANCE instance,
         inputLastFrame = inputForFrame;
         inputForFrame.mouseDeltaX = 0;
         inputForFrame.mouseDeltaY = 0;
+        inputForFrame.newLeftClick = false;
+        inputForFrame.newRightClick = false;
 
         glfwSwapBuffers(window);
     }

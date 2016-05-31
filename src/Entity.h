@@ -14,10 +14,14 @@ struct AABBox
 };
 
 struct Entity
-{   
+{
+    bool32 isStatic;
     uint32 entityIndex;
     AABBox aabb;
-    uint32 modelIndex;
+    glm::vec3 position;
+    glm::mat4 rotMtx;
+    glm::mat4 transMtx;
+    RenderReferenceIndex renderInfo;
 };
 
 bool32
