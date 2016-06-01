@@ -167,19 +167,6 @@ loadModel(thread_context *thread, GameState *gameState, platformServiceReadEntir
                 readP += (*chunkLength - 6); // -6 for the header we've read already
         }
     }
-
-    gameState->numModels++;
-    for(uint32 v = 0; v < model->numVerts; ++v)
-    {
-        printf("v%d: %f, %f, %f\n", v, model->vertices[v].pos.x,
-               model->vertices[v].pos.y,
-               model->vertices[v].pos.z);
-    }
-    for(uint32 in = 0; in < model->numIndices; ++in)
-    {
-        printf("%d ", model->indices[in]);
-    }
-    printf("\n");
     return model;
 }
 
