@@ -10,6 +10,7 @@
 #include "Model.h"
 #include "glRender.h"
 #include "Entity.cpp"
+#include "GJK.h"
 #include "Octree.cpp"
 #include "GeneralAllocator.cpp"
 #include "BucketArray.cpp"

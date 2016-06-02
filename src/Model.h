@@ -14,12 +14,21 @@ struct Vertex
     glm::vec2 texCoords;    
 };
 
+struct ConvexHull
+{
+    uint32 numVerts;
+    glm::vec3 *vertices;
+    uint32 numIndices;
+    uint32 *indices;
+};
+
 struct Model
 {
     uint32 numVerts;
     Vertex *vertices;
     uint32 numIndices;
     uint32 *indices;
+    ConvexHull hull;
     char *vShaderPath;
     char *fShaderPath;
 };
