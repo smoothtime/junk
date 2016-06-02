@@ -20,5 +20,5 @@ BucketArray<T> BucketArray<T>::initBucketArray(uint32 elementSize, uint32 numEle
 template <class T>
 T* BucketArray<T>::getElem(uint32 bucketIndex, uint32 elemIndex)
 {
-    return
+    return new T;
 }

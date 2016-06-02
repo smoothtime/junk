@@ -9,6 +9,8 @@
 
 #define SUPPORT(b1, b2, d) foo(b1, d) - bar(b2, -1.0f * d)
 
+glm::vec3 origin = glm::vec3(0);
+
 glm::vec3
 generalSupport(ConvexHull *hull, glm::vec3 direction)
 {
@@ -20,7 +22,6 @@ bool32
 doSimplex(int32 *numPoints, glm::vec3 *points, glm::vec3 *dir)
 {
     bool32 result = false;
-    glm::vec3 origin = glm::vec3(0);
     switch(*numPoints)
     {
         case 0:
@@ -30,10 +31,13 @@ doSimplex(int32 *numPoints, glm::vec3 *points, glm::vec3 *dir)
             break;
         case 2:
         {
+
+            checkABLineSegment:
             glm::vec3 A = points[0];
             glm::vec3 B = points[1];
             glm::vec3 AB = B - A;
             glm::vec3 AO = origin - A;
+
             if(glm::dot(AO, AB) >= 0)
             {
                 // new simplex is a line segment
@@ -54,6 +58,7 @@ doSimplex(int32 *numPoints, glm::vec3 *points, glm::vec3 *dir)
         }
         case 3:
         {
+            checkABCTriangle:
             glm::vec3 C = points[2];
             glm::vec3 B = points[1];
             glm::vec3 A = points[0];
@@ -65,9 +70,9 @@ doSimplex(int32 *numPoints, glm::vec3 *points, glm::vec3 *dir)
 
             if(glm::dot(glm::cross(ABC, AC), AO) >= 0)
             {
-                // new simplex is a line segment
                 if(glm::dot(AC, AO) >= 0)
                 {
+                    // new simplex is a line segment
                     points[2] = C;
                     points[1] = A;
                     *numPoints = 3;
@@ -76,25 +81,7 @@ doSimplex(int32 *numPoints, glm::vec3 *points, glm::vec3 *dir)
                 }
                 else
                 {
-                    // Star
-                    star:
-                    if(glm::dot(AB, AO) >= 0)
-                    {
-                        // new simplex is a line segment
-                        points[2] = B;
-                        points[1] = A;
-                        *numPoints = 3;
-                        *dir = glm::cross(glm::cross(AB, AO), AB);
-                        break;
-                    }
-                    else
-                    {
-                        // new simplex is single point
-                        points[1] = A;
-                        *numPoints = 1;
-                        *dir = AO;
-                        break;
-                    }
+                    goto checkABLineSegment;
                 }
             }
             else
@@ -102,8 +89,8 @@ doSimplex(int32 *numPoints, glm::vec3 *points, glm::vec3 *dir)
                 // ABC X AC dot AO < 0
                 if(glm::dot(glm::cross(AB, ABC), AO) > 0)
                 {
-                    // Star
-                    goto star;
+                    // Star 
+                    goto checkABLineSegment;
                 }
                 else
                 {
@@ -119,8 +106,8 @@ doSimplex(int32 *numPoints, glm::vec3 *points, glm::vec3 *dir)
                     }
                     else
                     {
-                        points[3] = C;
-                        points[2] = B;
+                        points[3] = B;
+                        points[2] = C;
                         points[1] = A;
                         *numPoints = 4;
                         *dir = -1.0f * ABC;
@@ -133,6 +120,67 @@ doSimplex(int32 *numPoints, glm::vec3 *points, glm::vec3 *dir)
         case 4:
         {
             // We're at a tetrahedron
+            glm::vec3 D = points[3];
+            glm::vec3 C = points[2];
+            glm::vec3 B = points[1];
+            glm::vec3 A = points[0];
+            glm::vec3 AB = B - A;
+            glm::vec3 AC = C - A;
+            glm::vec3 AD = D - A;
+            glm::vec3 AO = origin - A;
+            // test the planes to see if we're behind all of them
+            // if behind all, then the tetrahdron contains the origin
+            
+            glm::vec3 ABC = glm::cross(AB, AC);
+            glm::vec3 ACD = glm::cross(AC, AD);
+            glm::vec3 ADB = glm::cross(AD, AB);
+
+            bool32 aboveABC = glm::dot(ABC, AO) >= 0;
+            bool32 aboveACD = glm::dot(ACD, AO) >= 0;
+            bool32 aboveADB = glm::dot(ADB, AO) >= 0;
+            if(aboveABC)
+            {
+                if(aboveACD)
+                {
+                    if(aboveADB)
+                    {
+                        //check A, 3 edges
+                    }
+                }
+                else if(aboveADB)
+                {
+                }
+                else
+                {
+                    // check triangle ABC
+                    goto checkABCTriangle;
+                }
+                
+            }
+            else if(aboveACD)
+            {
+                if(aboveADB)
+                {
+                }
+                else
+                {
+                    // check triangle ACD
+                    points[1] = C;
+                    points[2] = D;
+                    goto checkABCTriangle;
+                }
+            }
+            else if(aboveADB)
+            {
+                // check triangle ADB
+                points[1] = D;
+                points[2] = B;
+                goto checkABCTriangle;
+            }
+            else
+            {
+                result = true;
+            }
             break;
         }
     }

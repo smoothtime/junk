@@ -55,6 +55,13 @@ key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
         else if(action == GLFW_RELEASE)
             inputForFrame.d = false;
     }
+    if(key == GLFW_KEY_SPACE)
+    {
+        if(action == GLFW_PRESS)
+            inputForFrame.space = true;
+        else if(action == GLFW_RELEASE)
+            inputForFrame.space = false;
+    }
 }
 
 bool mouseInit = true;
@@ -74,6 +81,36 @@ void mouse_callback(GLFWwindow *window, real64 xpos, real64 ypos)
     inputForFrame.mouseY = (real32) ypos;
     inputForFrame.mouseDeltaX = (real32) xpos - inputLastFrame.mouseX;
     inputForFrame.mouseDeltaY = inputLastFrame.mouseY - (real32) ypos;
+    
+}
+
+void
+mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
+{
+    if(button == GLFW_MOUSE_BUTTON_LEFT)
+    {
+        if(action == GLFW_PRESS)
+        {
+            inputForFrame.leftClick = true;
+            inputForFrame.newLeftClick = true;
+        }
+        else if(action == GLFW_RELEASE)
+        {
+            inputForFrame.leftClick = false;
+        }
+    }
+    else if(button == GLFW_MOUSE_BUTTON_RIGHT)
+    {
+        if(action == GLFW_PRESS)
+        {
+            inputForFrame.rightClick = true;
+            inputForFrame.newRightClick = true;
+        }
+        else if(action == GLFW_RELEASE)
+        {
+            inputForFrame.rightClick = false;
+        }
+    }
     
 }
 
@@ -134,8 +171,9 @@ main(int32 argc, char **argv)
     glfwMakeContextCurrent(window);
     glfwSetKeyCallback(window, key_callback);
     glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetWindowFocusCallback(window, focus_callback);
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
     glViewport(0, 0, windowWidth, windowHeight);
 
     const char *dyLibPath = "libgame.so";
@@ -165,6 +203,8 @@ main(int32 argc, char **argv)
             gameCodeReloaded = true;
         }
         glfwPollEvents();
+        inputForFrame.resX = windowWidth;
+        inputForFrame.resY = windowHeight;
         real64 time = glfwGetTime();
         deltaTime  = time - lastTime;
         lastTime = time;
@@ -175,6 +215,8 @@ main(int32 argc, char **argv)
         inputLastFrame = inputForFrame;
         inputForFrame.mouseDeltaX = 0;
         inputForFrame.mouseDeltaY = 0;
+        inputForFrame.newLeftClick = false;
+        inputForFrame.newRightClick = false;
         glfwSwapBuffers(window);
     }
 
