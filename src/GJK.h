@@ -71,7 +71,7 @@ checkTriangleSimplex(int32 *nextIterPoints, glm::vec3 *points, glm::vec3 *dir)
     glm::vec3 AB = B - A;
     glm::vec3 ABC = glm::cross(AB, AC);
 
-    if(glm::dot(glm::cross(AB, ABC), AO) > 0)
+    if(glm::dot(glm::cross(AB, ABC), AO) >= 0)
     {
         if(glm::dot(AB, AO) >= 0)
         {
@@ -96,7 +96,7 @@ checkTriangleSimplex(int32 *nextIterPoints, glm::vec3 *points, glm::vec3 *dir)
         else
         {
             // Inside triangle
-            if(glm::dot(ABC, AO) > 0)
+            if(glm::dot(ABC, AO) >= 0)
             {
                 points[3] = C;
                 points[2] = B;
@@ -120,7 +120,7 @@ checkTriangleSimplex(int32 *nextIterPoints, glm::vec3 *points, glm::vec3 *dir)
 /*
     if(aboveTLviaTLM)
     {
-        canBe(TL, L);
+        canBe(TL, T);
         checkForTLPointTO;
     }
     else(belowTLviaTLM)
@@ -165,7 +165,7 @@ checkTwoFacesSimplex(int32 *nextIterPoints, glm::vec3 *points, glm::vec3 *dir,
     glm::vec3 TLM = glm::cross(TL, TM);
     glm::vec3 TMR = glm::cross(TR, TM);
 
-    if(glm::dot(glm::cross(TL, TLM), TO) > 0)
+    if(glm::dot(glm::cross(TL, TLM), TO) >= 0)
     {
         // "above"TLviaTLM
         // can be TL, T, or TM
@@ -212,7 +212,7 @@ checkTwoFacesSimplex(int32 *nextIterPoints, glm::vec3 *points, glm::vec3 *dir,
             if(glm::dot(glm::cross(TM, TMR), TO) >= 0)
             {
                 // aboveTMviaTMR
-                if(glm::dot(TM, TO) > 0)
+                if(glm::dot(TM, TO) >= 0)
                 {
                     *dir = TM;
                     *nextIterPoints = 3;
@@ -266,7 +266,6 @@ checkTwoFacesSimplex(int32 *nextIterPoints, glm::vec3 *points, glm::vec3 *dir,
                     }
                 }
             }                        
-
         }
 
     }
