@@ -67,7 +67,7 @@ initTexture(RenderReferences *rendRefs, const char *texturePath)
 
 //TODO(james): make it so you can pass in parameters like GL_STATIC_DRAW, etc
 void
-initVertexIndexBuffers(RenderReferences *rendRefs, Model *model)
+initVertexIndexBuffers(RenderReferences *rendRefs, Mesh *mesh)
 {
     
     glGenVertexArrays(1, rendRefs->VAOs + rendRefs->numVAOs);
@@ -77,10 +77,10 @@ initVertexIndexBuffers(RenderReferences *rendRefs, Model *model)
     glBindVertexArray(rendRefs->VAOs[rendRefs->numVAOs]);
     
     glBindBuffer(GL_ARRAY_BUFFER, rendRefs->VBOs[rendRefs->numVBOs]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * model->numVerts, model->vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * mesh->numVerts, mesh->vertices, GL_STATIC_DRAW);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, rendRefs->EBOs[rendRefs->numEBOs]);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLfloat) * model->numIndices, model->indices, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLfloat) * mesh->numIndices, mesh->indices, GL_STATIC_DRAW);
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid *) 0);
     glEnableVertexAttribArray(0);
@@ -95,7 +95,7 @@ initVertexIndexBuffers(RenderReferences *rendRefs, Model *model)
 }
 
 void
-overrideVertexBuffers(RenderReferences *rendRefs, RenderReferenceIndex toClear, Model* model)
+overrideVertexBuffers(RenderReferences *rendRefs, RenderReferenceIndex toClear, Mesh* model)
 {
     glBindVertexArray(rendRefs->VAOs[rendRefs->numVAOs]);
     

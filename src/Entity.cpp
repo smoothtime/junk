@@ -8,7 +8,7 @@
 #include "Entity.h"
 
 AABBox
-createBaseAABBox(Entity *ent, Model *model)
+createBaseAABBox(Entity *ent, Mesh *model)
 {
     glm::vec3 minBounds = model->vertices[0].pos;
     glm::vec3 maxBounds = minBounds;
@@ -105,3 +105,4 @@ transformAABB(glm::mat4 transform, AABBox *box)
     result.maxBound = newMax;
     return result;
 }
+

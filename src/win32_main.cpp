@@ -131,6 +131,11 @@ FREE_FILE(psFreeFile)
     }
 }
 
+PLATFORM_LOG(win32Log)
+{
+    OutputDebugStringA(msg);
+}
+
 READ_ENTIRE_FILE(psReadEntireFile)
 {
     // I'll do this later
@@ -221,6 +226,7 @@ WinMain(HINSTANCE instance,
     GameMemory memory = {};
     memory.isInitialized = false;
     memory.platformServiceReadFile = psReadEntireFile;
+    memory.log = win32Log;
     memory.permanentStorageSize = Megabytes(256);
     memory.transientStorageSize = Gigabytes(1);
     uint64 totalSize = memory.permanentStorageSize + memory.transientStorageSize;
@@ -260,10 +266,12 @@ WinMain(HINSTANCE instance,
         deltaTime  = time - lastTime;
         lastTime = time;
 
+#if 0
         char output[256];
         _snprintf_s(output, sizeof(output),
                     "MouseX for frame: %f.\n MouseY for frame: %f.\n DeltaX for frame: %f.\n DeltaY for frame: %f.\n", inputForFrame.mouseX, inputForFrame.mouseY, inputForFrame.mouseDeltaX, inputForFrame.mouseDeltaY);
         OutputDebugStringA(output);
+#endif
         if(gameDLL.gameUpdate)
         {
             gameDLL.gameUpdate(&thread, &memory, &inputForFrame, deltaTime, gameCodeReloaded);

@@ -15,19 +15,19 @@ const uint32 BF_ADB = 0x04;
 glm::vec3 origin = glm::vec3(0);
 
 glm::vec3
-generalSupport(ConvexHull *hull, glm::vec3 direction)
+generalSupport(Mesh *colMesh, glm::vec3 direction)
 {
     glm::vec3 result;
 
-    result = hull->vertices[0];
+    result = colMesh->vertices[0].pos;
     real32 maxDot = glm::dot(direction, result);
-    for(uint32 vert = 1; vert < hull->numVerts; ++vert)
+    for(uint32 vert = 1; vert < colMesh->numVerts; ++vert)
     {
-        real32 testDot = glm::dot(hull->vertices[vert], direction);
+        real32 testDot = glm::dot(colMesh->vertices[vert].pos, direction);
         if(testDot > maxDot)
         {
             maxDot = testDot;
-            result = hull->vertices[vert];
+            result = colMesh->vertices[vert].pos;
         }
         
     }
@@ -43,12 +43,14 @@ checkLineSegmentSimplex(int32 *nextIterPoints, glm::vec3 *points, glm::vec3 *dir
     glm::vec3 AO = -1.0f * A;
     glm::vec3 AB = B - A;
 
-    if(glm::dot(AB, AO) >= 0)
+    real32 dotABAO = glm::dot(AB, AO);
+    if(dotABAO > 0)
     {
         points[1] = A;
         points[2] = B;
         *nextIterPoints = 3;
-        *dir = glm::cross(glm::cross(AB, AO), AB);
+        glm::vec3 tmp = glm::cross(AB, AO);
+        *dir = glm::cross(tmp, AB);
     }
     else
     {
@@ -71,14 +73,18 @@ checkTriangleSimplex(int32 *nextIterPoints, glm::vec3 *points, glm::vec3 *dir)
     glm::vec3 AB = B - A;
     glm::vec3 ABC = glm::cross(AB, AC);
 
-    if(glm::dot(glm::cross(AB, ABC), AO) >= 0)
+    glm::vec3 cross = glm::cross(AB, ABC);
+    real32 dot = glm::dot(cross, AO);
+    if(dot > 0)
     {
-        if(glm::dot(AB, AO) >= 0)
+        dot = glm::dot(AB, AO);
+        if(dot > 0)
         {
             points[1] = A;
             points[2] = B;
             *nextIterPoints = 3;
-            *dir = glm::cross(glm::cross(AB, AO), AB);
+            glm::vec3 tmp = glm::cross(AB, AO);
+            *dir = glm::cross(tmp, AB);
         }
         else
         {
@@ -88,7 +94,9 @@ checkTriangleSimplex(int32 *nextIterPoints, glm::vec3 *points, glm::vec3 *dir)
     }
     else
     {
-        if(glm::dot(glm::cross(ABC, AC), AO) >= 0)
+        cross = glm::cross(ABC, AC);
+        dot = glm::dot(cross, AO);
+        if(dot > 0)
         {
             points[1] = C;
             checkLineSegmentSimplex(nextIterPoints, points, dir);
@@ -96,7 +104,8 @@ checkTriangleSimplex(int32 *nextIterPoints, glm::vec3 *points, glm::vec3 *dir)
         else
         {
             // Inside triangle
-            if(glm::dot(ABC, AO) >= 0)
+            dot = glm::dot(ABC, AO);
+            if(dot > 0)
             {
                 points[3] = C;
                 points[2] = B;
@@ -115,40 +124,6 @@ checkTriangleSimplex(int32 *nextIterPoints, glm::vec3 *points, glm::vec3 *dir)
         }
     }    
 }
-
-// My understanding of 2 Face case
-/*
-    if(aboveTLviaTLM)
-    {
-        canBe(TL, T);
-        checkForTLPointTO;
-    }
-    else(belowTLviaTLM)
-    {
-        if(aboveTMviaTLM)
-        {
-            canBe(outfaceofTLM);
-        }
-        else(belowTMviaTLM)
-        {
-            if(aboveTMviaTMR)
-            {
-                canBe(TM, T);
-                checkForTMPointTO;
-            }
-            if(belowTMviaTMR and aboveTRviaTMR)
-            {
-                canBe(outfaceofTMR);
-            }
-            if(belowTMviaTMR and belowTRviaTMR)
-            {
-                canBe(TR, T);
-                checkForTRPointTO;
-            }
-        }
-
-    }
-*/
 inline void
 checkTwoFacesSimplex(int32 *nextIterPoints, glm::vec3 *points, glm::vec3 *dir,
                      uint32 tIndex, uint32 lIndex, uint32 mIndex, uint32 rIndex)
@@ -165,117 +140,127 @@ checkTwoFacesSimplex(int32 *nextIterPoints, glm::vec3 *points, glm::vec3 *dir,
     glm::vec3 TLM = glm::cross(TL, TM);
     glm::vec3 TMR = glm::cross(TR, TM);
 
-    if(glm::dot(glm::cross(TL, TLM), TO) >= 0)
+    // check the middle edge first to have an even triangle check on either branch path
+    if(dot(cross(TLM, TM), TO) < 0)
     {
-        // "above"TLviaTLM
-        // can be TL, T, or TM
-        if(glm::dot(TL, TO) >= 0)
+        if(dot(cross(TL, TLM), TO) > 0)
         {
-            *dir = glm::cross(glm::cross(TL, TO), TL);
-            *nextIterPoints = 3;
-            points[1] = T;
-            points[2] = L;
-        }
-        else
-        {
-            if(glm::dot(TM, TO))
+            // we're on the "left" of TL according to the plane TLM
+
+            if(dot(TL, TO) > 0)
             {
-                *dir = glm::cross(glm::cross(TM, TO), TM);
-                *nextIterPoints = 3;
+                // it's TL, TLxTOxTL
                 points[1] = T;
-                points[2] = M;
+                points[2] = L;
+                *dir = glm::cross(glm::cross(TL, TO), TL);
+                *nextIterPoints = 3;
             }
             else
             {
-                *dir = TO;
-                *nextIterPoints = 2;
-                points[1] = T;
-            }
-            
-        }
-    }
-    else // belowTLviaTLM
-    {
-        if(glm::dot(glm::cross(TLM, TM), TO) < 0) 
-        {
-            // aboveTMviaTLM between TL and TM according to TLM
-            // can only be TLM since -1.0f * TLM didn't get through the plane test
-            *dir = TLM;
-            *nextIterPoints = 4;
-            points[1] = T;
-            points[2] = L;
-            points[3] = M;
-
-        }
-        else // belowTMviaTLM
-        {
-            if(glm::dot(glm::cross(TM, TMR), TO) >= 0)
-            {
-                // aboveTMviaTMR
-                if(glm::dot(TM, TO) >= 0)
+                if(dot(TM, TO) > 0)
                 {
-                    *dir = TM;
-                    *nextIterPoints = 3;
+                    // it's TM, TMxTOxTM
                     points[1] = T;
                     points[2] = M;
+                    *dir = glm::cross(glm::cross(TM, TO), TM);
+                    *nextIterPoints = 3;
                 }
                 else
                 {
-                    if(glm::dot(glm::cross(TMR, TR), TO) >= 0)
-                    {
-                        *dir = TR;
-                        *nextIterPoints = 3;
-                        points[1] = T;
-                        points[2] = R;
-                    }
-                    else
-                    {
-                        *dir = T;
-                        *nextIterPoints = 2;
-                        points[1] = T;
-                    }
+                    // it's T, TO
+                    points[1] = T;
+                    *dir = TO;
+                    *nextIterPoints = 2;
                 }
             }
-            else // belowTMviaTMR
+        }
+        else
+        {
+            // we're in between TL and TM on plane TLM
+
+            // inside triangle
+            // can't be negative TLM or else plane test would be different
+
+            // it's TLM, +TLM
+            points[1] = T;
+            points[2] = L;
+            points[3] = M;
+            *dir = TLM;
+            *nextIterPoints = 4;
+        }
+    }
+    else 
+    {
+        // we're to the "right" of TM according to the plane TLM
+
+        if(dot(cross(TMR, TR), TO) > 0)
+        {
+            // we're to the "right" of TR according to the plane TMR
+
+            if(dot(TR, TO) > 0)
             {
-                if(glm::dot(glm::cross(TMR, TR), TO) < 0)
+                // it's TR, TRxTOxTR
+                points[1] = T;
+                points[2] = R;
+                *dir = glm::cross(glm::cross(TR, TO), TR);
+                *nextIterPoints = 3;
+            }
+            else
+            {
+                // it's T, TO
+                points[1] = T;
+                *dir = TO;
+                *nextIterPoints = 2;
+            }
+        }
+        else
+        {
+            // we're in between TM and TR
+
+            if(dot(cross(TM, TMR), TO) > 0)
+            {
+                // we're to the "left" of M according to the plane TMR
+
+                if(dot(TM, TO) > 0)
                 {
-                    // aboveTRviaTMR between TM and TR according to TMR
-                    // can only be TMR since -1.0f * TMR didn't get through the plane test
-                    *dir = TMR;
-                    *nextIterPoints = 4;
+                    // it's TM, TMxTOxTM
                     points[1] = T;
                     points[2] = M;
-                    points[3] = R;
+                    *dir = glm::cross(glm::cross(TM, TO), TM);
+                    *nextIterPoints = 3;
                 }
-                else // below TR
+                else
                 {
-                    // can be either TR or T
-                    if(glm::dot(TR, TO) >= 0)
-                    {
-                        *dir = TR;
-                        *nextIterPoints = 3;
-                        points[1] = T;
-                        points[2] = R;
-                    }
-                    else
-                    {
-                        *dir = T;
-                        *nextIterPoints = 2;
-                        points[1] = T;
-                    }
+                    // it's T, TO
+                    points[1] = T;
+                    *dir = TO;
+                    *nextIterPoints = 2;
                 }
-            }                        
-        }
+            }
+            else
+            {
+                // we're in between TM and TR according to plane TMR
 
+                // can only be positive face normal
+                // it's TMR, +TMR
+                points[1] = T;
+                points[2] = M;
+                points[3] = R;
+                *dir = TMR;
+                *nextIterPoints = 4;
+            }
+        }
     }
-  
 }
 
 bool32
 doSimplex(int32 *numPoints, glm::vec3 *points, glm::vec3 *dir)
 {
     bool32 result = false;
+    char log[512];
+    sprintf_s(log, "numPoints: %d\n", *numPoints);
+    gLog(log);
+    real32 GJK_EPISILON = 0.000001;
     switch(*numPoints)
     {
         case 0:
@@ -315,10 +300,25 @@ doSimplex(int32 *numPoints, glm::vec3 *points, glm::vec3 *dir)
             glm::vec3 ACD = glm::cross(AC, AD);
             glm::vec3 ADB = glm::cross(AD, AB);
 
+
+            // TODO(james): delete me later
+            real32 ABCdotAO = glm::dot(ABC, AO);
+            real32 ACDdotAO = glm::dot(ACD, AO);
+            real32 ADBdotAO = glm::dot(ADB, AO);
+            
+            if(ABCdotAO > 0 && ABCdotAO - GJK_EPISILON < 0 ||
+               ACDdotAO > 0 && ACDdotAO - GJK_EPISILON < 0 ||
+               ADBdotAO > 0 && ADBdotAO - GJK_EPISILON < 0)
+            {
+                //sprintf_s(log, "ABC %f, ACD %f, ADB %f\n", ABCdotAO, ACDdotAO, ADBdotAO);
+                //gLog(log);
+                gLog("extremely barely above a face normal");
+            }
+
             int32 planeTest =
-                (glm::dot(ABC, AO) >= 0 ? BF_ABC : 0) |
-                (glm::dot(ACD, AO) >= 0 ? BF_ACD : 0) |
-                (glm::dot(ADB, AO) >= 0 ? BF_ADB : 0);
+                (glm::dot(ABC, AO) > 0 ? BF_ABC : 0) |
+                (glm::dot(ACD, AO) > 0 ? BF_ACD : 0) |
+                (glm::dot(ADB, AO) > 0 ? BF_ADB : 0);
 
             switch(planeTest)
             {
@@ -331,62 +331,108 @@ doSimplex(int32 *numPoints, glm::vec3 *points, glm::vec3 *dir)
                 case (BF_ABC | BF_ACD | BF_ADB):
                 {
                     // how?
-                    assert(false);
+                    // assert(false);
+                    result = true;
                     break;
                 }
                 case BF_ABC | BF_ACD:
                 {
-                    // check two faces, all 3 edges, and A
-                    T = 0; // A
-                    L = 1; // B
-                    M = 2; // C
-                    R = 3; // D
-                    checkTwoFacesSimplex(numPoints, points, dir,
-                                         T, L, M, R);
+                    if(ABCdotAO - GJK_EPISILON < 0 ||
+                       ACDdotAO - GJK_EPISILON < 0)
+                    {
+                        result = true;
+                    }
+                    else
+                    {
+                        // check two faces, all 3 edges, and A
+                        T = 0; // A
+                        L = 1; // B
+                        M = 2; // C
+                        R = 3; // D
+                        checkTwoFacesSimplex(numPoints, points, dir,
+                                             T, L, M, R);
+                    }
                     break;
                 }
                 case BF_ABC | BF_ADB:
                 {
-                    // check two faces, all 3 edges, and A
-                    T = 0; // A
-                    L = 3; // D
-                    M = 1; // B
-                    R = 2; // C
-                    checkTwoFacesSimplex(numPoints, points, dir,
-                                         T, L, M, R);
+                    if(ABCdotAO - GJK_EPISILON < 0 ||
+                       ADBdotAO - GJK_EPISILON < 0)
+                    {
+                        result = true;
+                    }
+                    else
+                    {
+                        // check two faces, all 3 edges, and A
+                        T = 0; // A
+                        L = 3; // D
+                        M = 1; // B
+                        R = 2; // C
+                        checkTwoFacesSimplex(numPoints, points, dir,
+                                             T, L, M, R);
+                    }
                     break;
                 }
                 case BF_ACD | BF_ADB:
                 {
-                    // check two faces, all 3 edges, and A
-                    T = 0; // A
-                    L = 2; // C
-                    M = 3; // D
-                    R = 1; // B
-                    checkTwoFacesSimplex(numPoints, points, dir,
-                                         T, L, M, R);
+                    if(ACDdotAO - GJK_EPISILON < 0 ||
+                       ADBdotAO - GJK_EPISILON < 0)
+                    {
+                        result = true;
+                    }
+                    else
+                    {
+                        // check two faces, all 3 edges, and A
+                        T = 0; // A
+                        L = 2; // C
+                        M = 3; // D
+                        R = 1; // B
+                        checkTwoFacesSimplex(numPoints, points, dir,
+                                             T, L, M, R);
+                    }
                     break;
                 }
                 case BF_ABC:
                 {
-                    // check face of ABC, 2 edges (AB & AC), and A
-                    checkTriangleSimplex(numPoints, points, dir);
+                    if(ABCdotAO - GJK_EPISILON < 0)
+                    {
+                        result = true;
+                    }
+                    else
+                    {
+                        // check face of ABC, 2 edges (AB & AC), and A
+                        checkTriangleSimplex(numPoints, points, dir);
+                    }
                     break;
                 }
                 case BF_ACD:
                 {
-                    // check face of ACD, 2 edges (AC & AD), and A
-                    points[1] = C;
-                    points[2] = D;
-                    checkTriangleSimplex(numPoints, points, dir);
+                    if(ACDdotAO - GJK_EPISILON < 0)
+                    {
+                        result = true;
+                    }
+                    else
+                    {
+                        // check face of ACD, 2 edges (AC & AD), and A
+                        points[1] = C;
+                        points[2] = D;
+                        checkTriangleSimplex(numPoints, points, dir);
+                    }
                     break;
                 }
                 case BF_ADB:
                 {
-                    // check face of ADB, 2 edges (AD & AB), and A
-                    points[1] = D;
-                    points[2] = B;
-                    checkTriangleSimplex(numPoints, points, dir);
+                    if(ADBdotAO - GJK_EPISILON < 0)
+                    {
+                        result = true;
+                    }
+                    else
+                    {
+                        // check face of ADB, 2 edges (AD & AB), and A
+                        points[1] = D;
+                        points[2] = B;
+                        checkTriangleSimplex(numPoints, points, dir);
+                    }
                     break;
                 }
                 
@@ -395,50 +441,107 @@ doSimplex(int32 *numPoints, glm::vec3 *points, glm::vec3 *dir)
             break;
         }
     }
+    if(dir->x <= GJK_EPISILON && dir->x >= -1.0f * GJK_EPISILON &&
+       dir->y <= GJK_EPISILON && dir->y >= -1.0f * GJK_EPISILON &&
+       dir->z <= GJK_EPISILON && dir->z >= -1.0f * GJK_EPISILON)
+    {
+        // we were right on the simplex
+        result = true;
+    }
     return result;
 }
 
 bool32
-gjk(glm::vec3 (*foo)(ConvexHull*, glm::vec3),
-    glm::vec3 (*bar)(ConvexHull*, glm::vec3),
-    ConvexHull *body1, ConvexHull *body2)
+gjk(glm::vec3 (*foo)(Mesh*, glm::vec3),
+    glm::vec3 (*bar)(Mesh*, glm::vec3),
+    Mesh *body1, Mesh *body2)
 {
     bool32 x = false;
-
-    glm::vec3 arbitraryDir = body1->vertices[0];
-    glm::vec3 direction = foo(body1, arbitraryDir) - bar(body2, -1.0f * arbitraryDir);
-
-    int32 numPoints = 1;
     glm::vec3 points[4] = {};
-    points[1] = -1.0f * direction; //origin to initial direction
+    
+    glm::vec3 arbitraryDir = glm::vec3(0.0f, 0.0f, -1.0f);//body1->vertices[0].pos;
+    glm::vec3 posDir = foo(body1, arbitraryDir);
+    glm::vec3 negDir = bar(body2, -1.0f * arbitraryDir);
+    
+    points[1] = posDir - negDir;
+    // search towards origin from here
+    glm::vec3 direction = -1.0f * points[1];
+    int32 numPoints = 2;
 
-    for(;;)
+    for(uint32 iterCount = 0;;++iterCount)
     {
-        glm::vec3 A = SUPPORT(body1, body2, direction);
+        if(iterCount > 1000)
+        {
+            gLog("what the fuck man");
+            // we're super duper close
+            x = true;
+            break;
+        }
+        posDir = foo(body1, direction);
+        negDir = bar(body2, -1.0f * direction);
+        glm::vec3 A = posDir - negDir;
         if(glm::dot(A, direction) < 0)
         {
             // vector from last point to A not going towards origin
             // no intersection
             break;
         }
-        points[0] = A;
-        if(doSimplex(&numPoints, points, &direction))
+        else
         {
-            x = true;
-            break;
+            points[0] = A;
+            if(doSimplex(&numPoints, points, &direction))
+            {
+                x = true;
+                break;
+            }
         }
     }
     
     return x;
 }
 
-void
-testGJK()
+bool32
+genericGJK(Mesh *x, Mesh *y)
 {
-    ConvexHull x = {};
-    bool32 test = gjk(&generalSupport, &generalSupport, &x, &x);
+    bool32 test = gjk(&generalSupport, &generalSupport, x, y);
+    return test;
 }
 
+Mesh
+initTestMesh(glm::vec3 basePos, GeneralAllocator *alctr)
+{
+    Mesh mesh;
+    mesh.numVerts = 8;
+    mesh.vertices = (Vertex *) alctr->alloc(sizeof(Vertex) * 8);
+
+    mesh.vertices[0].pos = basePos;
+    mesh.vertices[1].pos = basePos + glm::vec3( 1.0f,  1.0f, 0.0f);
+    mesh.vertices[2].pos = basePos + glm::vec3( 0.0f,  1.0f, 0.0f);
+    mesh.vertices[3].pos = basePos + glm::vec3( 1.0f,  0.0f, 0.0f);
+    mesh.vertices[4].pos = mesh.vertices[0].pos  + glm::vec3(0.0f, 0.0f, 1.0f);
+    mesh.vertices[5].pos = mesh.vertices[1].pos  + glm::vec3(0.0f, 0.0f, 1.0f);
+    mesh.vertices[6].pos = mesh.vertices[2].pos  + glm::vec3(0.0f, 0.0f, 1.0f);
+    mesh.vertices[7].pos = mesh.vertices[3].pos  + glm::vec3(0.0f, 0.0f, 1.0f);
+
+    for(uint8 i = 0;
+        i < 8;
+        ++i)
+    {
+        mesh.vertices[i].pos += glm::vec3(-.0f, 0.0f, 0.0f);
+    }
+
+    return mesh;
+}
+
+bool32
+testGJK(GeneralAllocator *alctr)
+{
+    Mesh box1 = initTestMesh(glm::vec3(0.0f), alctr);
+    Mesh box2 = initTestMesh(glm::vec3(2.0f), alctr);
+
+    return genericGJK(&box1, &box2);
+
+}
 
 #define GJK_H
 #endif

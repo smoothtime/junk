@@ -22,6 +22,7 @@ struct Entity
     glm::mat4 rotMtx;
     glm::mat4 transMtx;
     RenderReferenceIndex renderInfo;
+    Model *model;
 };
 
 bool32

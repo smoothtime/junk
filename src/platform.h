@@ -97,6 +97,12 @@ typedef FREE_FILE(platformServiceFreeFile);
 #define READ_ENTIRE_FILE(functionName) read_file functionName(thread_context *thread, const char *filePath)
 typedef READ_ENTIRE_FILE(platformServiceReadEntireFile);
 
+#define PLATFORM_LOG(functionName) void functionName(const char *msg)
+typedef PLATFORM_LOG(platformLog);
+
+// global logger to be set by platform;
+platformLog *gLog;
+
 typedef struct GameMemory
 {
     bool32 isInitialized;
@@ -106,6 +112,7 @@ typedef struct GameMemory
     void * transStorage;
 
     platformServiceReadEntireFile *platformServiceReadFile;
+    platformLog *log;
 } GameMemory;
 
 typedef struct GameInput

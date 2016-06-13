@@ -1,4 +1,4 @@
-#if !defined(MODEL_H)
+#if !defined(MESH_H)
 /* ========================================================================
    $File: $
    $Date: $
@@ -14,23 +14,32 @@ struct Vertex
     glm::vec2 texCoords;    
 };
 
-struct ConvexHull
+struct Mesh
 {
     uint32 numVerts;
-    glm::vec3 *vertices;
+    Vertex *vertices;
     uint32 numIndices;
     uint32 *indices;
 };
 
 struct Model
 {
-    uint32 numVerts;
-    Vertex *vertices;
-    uint32 numIndices;
-    uint32 *indices;
-    ConvexHull hull;
+    Mesh baseMesh;
+    Mesh worldMesh;
     char *vShaderPath;
     char *fShaderPath;
 };
-#define MODEL_H
+
+void
+transformMesh(glm::mat4 transform, Mesh *baseMesh, Mesh *toStore)
+{
+    for(uint32 v = 0;
+        v < baseMesh->numVerts;
+        ++v)
+    {
+        toStore->vertices[v].pos = glm::vec3(transform * glm::vec4(baseMesh->vertices[v].pos, 1.0f));
+    }
+    
+}
+#define MESH_H
 #endif

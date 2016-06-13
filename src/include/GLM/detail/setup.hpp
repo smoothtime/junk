@@ -187,8 +187,8 @@
 #define GLM_COMPILER_APPLE_CLANG61	0x40000070
 
 // Build model
-#define GLM_MODEL_32				0x00000010
-#define GLM_MODEL_64				0x00000020
+#define GLM_MESH_32				0x00000010
+#define GLM_MESH_64				0x00000020
 
 // Force generic C++ compiler
 #ifdef GLM_FORCE_COMPILER_UNKNOWN
@@ -352,24 +352,24 @@
 // Build model
 
 #if defined(__arch64__) || defined(__LP64__) || defined(_M_X64) || defined(__ppc64__) || defined(__x86_64__)
-#		define GLM_MODEL	GLM_MODEL_64
+#		define GLM_MESH	GLM_MESH_64
 #elif defined(__i386__) || defined(__ppc__)
-#	define GLM_MODEL	GLM_MODEL_32
+#	define GLM_MESH	GLM_MESH_32
 #else
-#	define GLM_MODEL	GLM_MODEL_32
+#	define GLM_MESH	GLM_MESH_32
 #endif//
 
-#if !defined(GLM_MODEL) && GLM_COMPILER != 0
-#	error "GLM_MODEL undefined, your compiler may not be supported by GLM. Add #define GLM_MODEL 0 to ignore this message."
-#endif//GLM_MODEL
+#if !defined(GLM_MESH) && GLM_COMPILER != 0
+#	error "GLM_MESH undefined, your compiler may not be supported by GLM. Add #define GLM_MESH 0 to ignore this message."
+#endif//GLM_MESH
 
-#if defined(GLM_MESSAGES) && !defined(GLM_MESSAGE_MODEL_DISPLAYED)
-#	define GLM_MESSAGE_MODEL_DISPLAYED
-#	if(GLM_MODEL == GLM_MODEL_64)
+#if defined(GLM_MESSAGES) && !defined(GLM_MESSAGE_MESH_DISPLAYED)
+#	define GLM_MESSAGE_MESH_DISPLAYED
+#	if(GLM_MESH == GLM_MESH_64)
 #		pragma message("GLM: 64 bits model")
-#	elif(GLM_MODEL == GLM_MODEL_32)
+#	elif(GLM_MESH == GLM_MESH_32)
 #		pragma message("GLM: 32 bits model")
-#	endif//GLM_MODEL
+#	endif//GLM_MESH
 #endif//GLM_MESSAGE
 
 ///////////////////////////////////////////////////////////////////////////////////

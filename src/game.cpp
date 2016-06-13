@@ -43,7 +43,7 @@ GAME_UPDATE(gameUpdate)
                         memory->permanentStorageSize - sizeof(GameState),
                         (uint8 *)memory->permStorage + sizeof(GameState));
         gameState->assetAlctr = initGeneralAllocator(memArena, Megabytes(5));
-
+        gLog = memory->log;
 
         // Initialize Rendering part
         glewExperimental = GL_TRUE;
@@ -63,15 +63,16 @@ GAME_UPDATE(gameUpdate)
         rr->EBOs = (GLuint *) gameState->assetAlctr->alloc(sizeof(GLuint) * rr->maxObjects);
 
         // TODO(james): find out a good way to lay out memory so you don't have to
-        // pointer chase both to the Model and then to all the elements
+        // pointer chase both to the Mesh and then to all the elements
         gameState->maxModels = 128;
         gameState->models = (Model *) gameState->assetAlctr->alloc(sizeof(Model) * gameState->maxModels);
 
         // hardcoded test model and textures
-        Model *model = loadModel(thread, gameState, memory->platformServiceReadFile, "../data/test.3ds");
+        Model *model = loadModel(thread, gameState, memory->platformServiceReadFile, "../data/convex.3ds");
+        assert(model->baseMesh.numVerts != 0);
         initShader(gameState->rendRefs, "../data/vshader_1.vs", "../data/fshader_1.fs");
         initTexture(gameState->rendRefs, "../data/wall.jpg");
-        initVertexIndexBuffers(gameState->rendRefs, model);
+        initVertexIndexBuffers(gameState->rendRefs, &model->baseMesh);
 
         gameState->entityCount = 5;
         for(uint32 x = 0; x < 5; ++x)
@@ -82,8 +83,9 @@ GAME_UPDATE(gameUpdate)
             ent->position = glm::vec3(3.5f * x, 0.0f, -3.0f);
             ent->transMtx = glm::translate(glm::mat4(), ent->position);
             ent->rotMtx = glm::mat4(1);
-            ent->renderInfo = { 0, 0, 0, 0, 0, model->numIndices };
-            ent->aabb = createBaseAABBox(ent, model);
+            ent->renderInfo = { 0, 0, 0, 0, 0, model->baseMesh.numIndices };
+            ent->aabb = createBaseAABBox(ent, &model->baseMesh);
+            ent->model = model;
         }
     }
     else if(reloadExtensions)
@@ -96,6 +98,8 @@ GAME_UPDATE(gameUpdate)
     }
     else
     {
+        gLog("?\n");
+        
         gameState->deltaTime = deltaTime;
         real32 sensitivity = 0.001f;
         real32 camSpeed = 10.0f * (real32) deltaTime;
@@ -164,18 +168,21 @@ GAME_UPDATE(gameUpdate)
                                        glmModel, glmProjection);
         if(input->newLeftClick)
         {
-            Model *clickVis = gameState->models + 1;
+            Model *clickVisModel = gameState->models + 1;
+            Mesh *clickVis = &clickVisModel->baseMesh;
             clickVis->numVerts = 8;
             clickVis->vertices = (Vertex *) gameState->assetAlctr->alloc(sizeof(Vertex) * 8);
+            clickVisModel->worldMesh.numVerts = clickVis->numVerts;
+            clickVisModel->worldMesh.vertices = (Vertex *) gameState->assetAlctr->alloc(sizeof(Vertex) * clickVis->numVerts);
 
             clickVis->vertices[0].pos = cam->position + (-0.05f * cam->right) +  (0.05f * cam->up)  + glm::vec3(rayDir);
             clickVis->vertices[1].pos = cam->position + (0.05f * cam->right) +  (0.05f * cam->up)   + glm::vec3(rayDir);
             clickVis->vertices[2].pos = cam->position + (-0.05f * cam->right) +  (-0.05f * cam->up) + glm::vec3(rayDir);
             clickVis->vertices[3].pos = cam->position + (0.05f * cam->right) +  (-0.05f * cam->up)  + glm::vec3(rayDir);
-            clickVis->vertices[4].pos = clickVis->vertices[0].pos  + 15.0f * glm::vec3(rayDir);
-            clickVis->vertices[5].pos = clickVis->vertices[1].pos  + 15.0f * glm::vec3(rayDir);
-            clickVis->vertices[6].pos = clickVis->vertices[2].pos  + 15.0f * glm::vec3(rayDir);
-            clickVis->vertices[7].pos = clickVis->vertices[3].pos  + 15.0f * glm::vec3(rayDir);
+            clickVis->vertices[4].pos = clickVis->vertices[0].pos  + 5.0f * glm::vec3(rayDir);
+            clickVis->vertices[5].pos = clickVis->vertices[1].pos  + 5.0f * glm::vec3(rayDir);
+            clickVis->vertices[6].pos = clickVis->vertices[2].pos  + 5.0f * glm::vec3(rayDir);
+            clickVis->vertices[7].pos = clickVis->vertices[3].pos  + 5.0f * glm::vec3(rayDir);
 
             for(uint8 i = 0;
                 i < 8;
@@ -186,6 +193,8 @@ GAME_UPDATE(gameUpdate)
             
             clickVis->numIndices = 36;
             clickVis->indices = (uint32 *) gameState->assetAlctr->alloc(sizeof(uint32) * 36);
+            clickVisModel->worldMesh.numIndices = clickVis->numIndices;
+            clickVisModel->worldMesh.indices = (uint32 *) gameState->assetAlctr->alloc(sizeof(uint32) * clickVis->numIndices);
 
             clickVis->indices[0] = 0;
             clickVis->indices[1] = 1;
@@ -228,20 +237,21 @@ GAME_UPDATE(gameUpdate)
             {
                 initVertexIndexBuffers(gameState->rendRefs, clickVis);
                 gameState->staticEntities[5] = {};
-                gameState->staticEntities[5].aabb = createBaseAABBox(&gameState->staticEntities[5], clickVis);
             }
             else
             {
                 RenderReferenceIndex toClear = { 1, 1, 1, 1, 1 };
                 overrideVertexBuffers(gameState->rendRefs, toClear, clickVis);
-                gameState->staticEntities[5].aabb = createBaseAABBox(&gameState->staticEntities[5], clickVis);
             }
+            gameState->staticEntities[5].model = clickVisModel;
+            gameState->staticEntities[5].aabb = createBaseAABBox(&gameState->staticEntities[5], clickVis);
             AABBox what = gameState->staticEntities[5].aabb;
             assert(what.minBound.x < what.maxBound.x);
             assert(what.minBound.y < what.maxBound.y);
             assert(what.minBound.z < what.maxBound.z);
         }
 
+        Entity *hackyVisEnt = gameState->staticEntities + 5;
 
         // Simulate
         for(uint32 x = 0;
@@ -251,25 +261,29 @@ GAME_UPDATE(gameUpdate)
             Entity *ent = &gameState->staticEntities[x];
 
             AABBox box1 = transformAABB(ent->transMtx * ent->rotMtx, &ent->aabb);
-            AABBox box2 = gameState->staticEntities[5].aabb;
-            if(doBoundsCollide(box1, box2))
+            AABBox box2 = hackyVisEnt->aabb;
+            if(hackyVisEnt->model != 0)//doBoundsCollide(box1, box2))
             {
-                glm::vec3 delta = glm::vec3(0);
+                transformMesh(ent->transMtx, &ent->model->baseMesh, &ent->model->worldMesh);
+                if(genericGJK(&ent->model->worldMesh, &hackyVisEnt->model->baseMesh))
+                {
 
-                delta = glm::vec3(0.0f, 0.0f, 0.5f) ;
+                    glm::vec3 delta = glm::vec3(0.0f, 0.0f, 0.01f) ;
 
-                ent->position += delta;
-                ent->transMtx = glm::translate(ent->transMtx, delta);
-            }
-            else
-            {
-                uint32 notColliding = 1;
+                    ent->position += delta;
+                    ent->transMtx = glm::translate(ent->transMtx, delta);
+                }
+                else
+                {
+                    uint32 notColliding = 1;
+                }
             }
             // ent->rotMtx = glm::rotate(ent->rotMtx, (GLfloat)gameState->deltaTime, glm::vec3(1.0f, 0.0f, 0.0f));
             
             real32 dummy = ent->aabb.minBound.x;
 
         }
+        //testGJK(gameState->assetAlctr);
         
         // Render
         glEnable(GL_DEPTH_TEST);
@@ -327,7 +341,7 @@ GAME_UPDATE(gameUpdate)
             
             glBindVertexArray(rr->VAOs[1]);
             //TODO(james): for now everything is a cube
-            glDrawElements(GL_TRIANGLES, gameState->models[0].numIndices, GL_UNSIGNED_INT, 0);
+            glDrawElements(GL_TRIANGLES, gameState->models[0].baseMesh.numIndices, GL_UNSIGNED_INT, 0);
             glBindTexture(GL_TEXTURE_2D, 0);
             glBindVertexArray(0);
             //        glEnable(GL_BLEND);

@@ -96,8 +96,8 @@ void func(GLuint LocationMVP, float Translate, glm::vec2 const & Rotate)
 	glm::mat4 ViewTranslate = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -Translate));
 	glm::mat4 ViewRotateX = glm::rotate(ViewTranslate, Rotate.y, glm::vec3(-1.0f, 0.0f, 0.0f));
 	glm::mat4 View = glm::rotate(ViewRotateX, Rotate.x, glm::vec3(0.0f, 1.0f, 0.0f));
-	glm::mat4 Model = glm::scale(glm::mat4(1.0f), glm::vec3(0.5f));
-	glm::mat4 MVP = Projection * View * Model;
+	glm::mat4 Mesh = glm::scale(glm::mat4(1.0f), glm::vec3(0.5f));
+	glm::mat4 MVP = Projection * View * Mesh;
 	glUniformMatrix4fv(LocationMVP, 1, GL_FALSE, glm::value_ptr(MVP));
 }
 

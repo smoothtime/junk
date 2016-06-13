@@ -71,7 +71,7 @@ namespace detail
 		GLM_FUNC_QUALIFIER static char const * value() {return "%f";};
 	};
 
-#	if GLM_MODEL == GLM_MODEL_32 && GLM_COMPILER && GLM_COMPILER_VC
+#	if GLM_MESH == GLM_MESH_32 && GLM_COMPILER && GLM_COMPILER_VC
 	template <>
 	struct literal<uint64_t, false>
 	{
@@ -83,7 +83,7 @@ namespace detail
 	{
 		GLM_FUNC_QUALIFIER static char const * value() {return "%lld";};
 	};
-#	endif//GLM_MODEL == GLM_MODEL_32 && GLM_COMPILER && GLM_COMPILER_VC
+#	endif//GLM_MESH == GLM_MESH_32 && GLM_COMPILER && GLM_COMPILER_VC
 
 	template <typename T>
 	struct prefix{};

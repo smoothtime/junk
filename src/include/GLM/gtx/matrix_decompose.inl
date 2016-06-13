@@ -64,9 +64,9 @@ namespace glm
 	*/
 
 	template <typename T, precision P>
-	GLM_FUNC_QUALIFIER bool decompose(tmat4x4<T, P> const & ModelMatrix, tvec3<T, P> & Scale, tquat<T, P> & Orientation, tvec3<T, P> & Translation, tvec3<T, P> & Skew, tvec4<T, P> & Perspective)
+	GLM_FUNC_QUALIFIER bool decompose(tmat4x4<T, P> const & MeshMatrix, tvec3<T, P> & Scale, tquat<T, P> & Orientation, tvec3<T, P> & Translation, tvec3<T, P> & Skew, tvec4<T, P> & Perspective)
 	{
-		tmat4x4<T, P> LocalMatrix(ModelMatrix);
+		tmat4x4<T, P> LocalMatrix(MeshMatrix);
 
 		// Normalize the matrix.
 		if(LocalMatrix[3][3] == static_cast<T>(0))

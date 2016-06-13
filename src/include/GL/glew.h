@@ -433,10 +433,10 @@ typedef char GLchar;
 #define GL_CULL_FACE_MODE 0x0B45
 #define GL_FRONT_FACE 0x0B46
 #define GL_LIGHTING 0x0B50
-#define GL_LIGHT_MODEL_LOCAL_VIEWER 0x0B51
-#define GL_LIGHT_MODEL_TWO_SIDE 0x0B52
-#define GL_LIGHT_MODEL_AMBIENT 0x0B53
-#define GL_SHADE_MODEL 0x0B54
+#define GL_LIGHT_MESH_LOCAL_VIEWER 0x0B51
+#define GL_LIGHT_MESH_TWO_SIDE 0x0B52
+#define GL_LIGHT_MESH_AMBIENT 0x0B53
+#define GL_SHADE_MESH 0x0B54
 #define GL_COLOR_MATERIAL_FACE 0x0B55
 #define GL_COLOR_MATERIAL_PARAMETER 0x0B56
 #define GL_COLOR_MATERIAL 0x0B57
@@ -465,10 +465,10 @@ typedef char GLchar;
 #define GL_MATRIX_MODE 0x0BA0
 #define GL_NORMALIZE 0x0BA1
 #define GL_VIEWPORT 0x0BA2
-#define GL_MODELVIEW_STACK_DEPTH 0x0BA3
+#define GL_MESHVIEW_STACK_DEPTH 0x0BA3
 #define GL_PROJECTION_STACK_DEPTH 0x0BA4
 #define GL_TEXTURE_STACK_DEPTH 0x0BA5
-#define GL_MODELVIEW_MATRIX 0x0BA6
+#define GL_MESHVIEW_MATRIX 0x0BA6
 #define GL_PROJECTION_MATRIX 0x0BA7
 #define GL_TEXTURE_MATRIX 0x0BA8
 #define GL_ATTRIB_STACK_DEPTH 0x0BB0
@@ -560,7 +560,7 @@ typedef char GLchar;
 #define GL_MAX_TEXTURE_SIZE 0x0D33
 #define GL_MAX_PIXEL_MAP_TABLE 0x0D34
 #define GL_MAX_ATTRIB_STACK_DEPTH 0x0D35
-#define GL_MAX_MODELVIEW_STACK_DEPTH 0x0D36
+#define GL_MAX_MESHVIEW_STACK_DEPTH 0x0D36
 #define GL_MAX_NAME_STACK_DEPTH 0x0D37
 #define GL_MAX_PROJECTION_STACK_DEPTH 0x0D38
 #define GL_MAX_TEXTURE_STACK_DEPTH 0x0D39
@@ -661,7 +661,7 @@ typedef char GLchar;
 #define GL_SHININESS 0x1601
 #define GL_AMBIENT_AND_DIFFUSE 0x1602
 #define GL_COLOR_INDEXES 0x1603
-#define GL_MODELVIEW 0x1700
+#define GL_MESHVIEW 0x1700
 #define GL_PROJECTION 0x1701
 #define GL_TEXTURE 0x1702
 #define GL_COLOR 0x1800
@@ -988,10 +988,10 @@ GLAPI void GLAPIENTRY glInterleavedArrays (GLenum format, GLsizei stride, const 
 GLAPI GLboolean GLAPIENTRY glIsEnabled (GLenum cap);
 GLAPI GLboolean GLAPIENTRY glIsList (GLuint list);
 GLAPI GLboolean GLAPIENTRY glIsTexture (GLuint texture);
-GLAPI void GLAPIENTRY glLightModelf (GLenum pname, GLfloat param);
-GLAPI void GLAPIENTRY glLightModelfv (GLenum pname, const GLfloat *params);
-GLAPI void GLAPIENTRY glLightModeli (GLenum pname, GLint param);
-GLAPI void GLAPIENTRY glLightModeliv (GLenum pname, const GLint *params);
+GLAPI void GLAPIENTRY glLightMeshf (GLenum pname, GLfloat param);
+GLAPI void GLAPIENTRY glLightMeshfv (GLenum pname, const GLfloat *params);
+GLAPI void GLAPIENTRY glLightMeshi (GLenum pname, GLint param);
+GLAPI void GLAPIENTRY glLightMeshiv (GLenum pname, const GLint *params);
 GLAPI void GLAPIENTRY glLightf (GLenum light, GLenum pname, GLfloat param);
 GLAPI void GLAPIENTRY glLightfv (GLenum light, GLenum pname, const GLfloat *params);
 GLAPI void GLAPIENTRY glLighti (GLenum light, GLenum pname, GLint param);
@@ -1095,7 +1095,7 @@ GLAPI void GLAPIENTRY glScaled (GLdouble x, GLdouble y, GLdouble z);
 GLAPI void GLAPIENTRY glScalef (GLfloat x, GLfloat y, GLfloat z);
 GLAPI void GLAPIENTRY glScissor (GLint x, GLint y, GLsizei width, GLsizei height);
 GLAPI void GLAPIENTRY glSelectBuffer (GLsizei size, GLuint *buffer);
-GLAPI void GLAPIENTRY glShadeModel (GLenum mode);
+GLAPI void GLAPIENTRY glShadeMesh (GLenum mode);
 GLAPI void GLAPIENTRY glStencilFunc (GLenum func, GLint ref, GLuint mask);
 GLAPI void GLAPIENTRY glStencilMask (GLuint mask);
 GLAPI void GLAPIENTRY glStencilOp (GLenum fail, GLenum zfail, GLenum zpass);
@@ -1237,7 +1237,7 @@ GLAPI void GLAPIENTRY glViewport (GLint x, GLint y, GLsizei width, GLsizei heigh
 #define GL_TEXTURE_MAX_LOD 0x813B
 #define GL_TEXTURE_BASE_LEVEL 0x813C
 #define GL_TEXTURE_MAX_LEVEL 0x813D
-#define GL_LIGHT_MODEL_COLOR_CONTROL 0x81F8
+#define GL_LIGHT_MESH_COLOR_CONTROL 0x81F8
 #define GL_SINGLE_COLOR 0x81F9
 #define GL_SEPARATE_SPECULAR_COLOR 0x81FA
 #define GL_UNSIGNED_BYTE_2_3_3_REV 0x8362
@@ -1321,7 +1321,7 @@ typedef void (GLAPIENTRY * PFNGLTEXSUBIMAGE3DPROC) (GLenum target, GLint level, 
 #define GL_ACTIVE_TEXTURE 0x84E0
 #define GL_CLIENT_ACTIVE_TEXTURE 0x84E1
 #define GL_MAX_TEXTURE_UNITS 0x84E2
-#define GL_TRANSPOSE_MODELVIEW_MATRIX 0x84E3
+#define GL_TRANSPOSE_MESHVIEW_MATRIX 0x84E3
 #define GL_TRANSPOSE_PROJECTION_MATRIX 0x84E4
 #define GL_TRANSPOSE_TEXTURE_MATRIX 0x84E5
 #define GL_TRANSPOSE_COLOR_MATRIX 0x84E6
@@ -3338,7 +3338,7 @@ typedef GLenum (GLAPIENTRY * PFNGLOBJECTUNPURGEABLEAPPLEPROC) (GLenum objectType
 #ifndef GL_APPLE_specular_vector
 #define GL_APPLE_specular_vector 1
 
-#define GL_LIGHT_MODEL_SPECULAR_VECTOR_APPLE 0x85B0
+#define GL_LIGHT_MESH_SPECULAR_VECTOR_APPLE 0x85B0
 
 #define GLEW_APPLE_specular_vector GLEW_GET_VAR(__GLEW_APPLE_specular_vector)
 
@@ -7307,7 +7307,7 @@ typedef void (GLAPIENTRY * PFNGLDRAWTRANSFORMFEEDBACKSTREAMINSTANCEDPROC) (GLenu
 #ifndef GL_ARB_transpose_matrix
 #define GL_ARB_transpose_matrix 1
 
-#define GL_TRANSPOSE_MODELVIEW_MATRIX_ARB 0x84E3
+#define GL_TRANSPOSE_MESHVIEW_MATRIX_ARB 0x84E3
 #define GL_TRANSPOSE_PROJECTION_MATRIX_ARB 0x84E4
 #define GL_TRANSPOSE_TEXTURE_MATRIX_ARB 0x84E5
 #define GL_TRANSPOSE_COLOR_MATRIX_ARB 0x84E6
@@ -7503,8 +7503,8 @@ typedef void (GLAPIENTRY * PFNGLVERTEXBINDINGDIVISORPROC) (GLuint bindingindex, 
 #ifndef GL_ARB_vertex_blend
 #define GL_ARB_vertex_blend 1
 
-#define GL_MODELVIEW0_ARB 0x1700
-#define GL_MODELVIEW1_ARB 0x850A
+#define GL_MESHVIEW0_ARB 0x1700
+#define GL_MESHVIEW1_ARB 0x850A
 #define GL_MAX_VERTEX_UNITS_ARB 0x86A4
 #define GL_ACTIVE_VERTEX_UNITS_ARB 0x86A5
 #define GL_WEIGHT_SUM_UNITY_ARB 0x86A6
@@ -7515,36 +7515,36 @@ typedef void (GLAPIENTRY * PFNGLVERTEXBINDINGDIVISORPROC) (GLuint bindingindex, 
 #define GL_WEIGHT_ARRAY_SIZE_ARB 0x86AB
 #define GL_WEIGHT_ARRAY_POINTER_ARB 0x86AC
 #define GL_WEIGHT_ARRAY_ARB 0x86AD
-#define GL_MODELVIEW2_ARB 0x8722
-#define GL_MODELVIEW3_ARB 0x8723
-#define GL_MODELVIEW4_ARB 0x8724
-#define GL_MODELVIEW5_ARB 0x8725
-#define GL_MODELVIEW6_ARB 0x8726
-#define GL_MODELVIEW7_ARB 0x8727
-#define GL_MODELVIEW8_ARB 0x8728
-#define GL_MODELVIEW9_ARB 0x8729
-#define GL_MODELVIEW10_ARB 0x872A
-#define GL_MODELVIEW11_ARB 0x872B
-#define GL_MODELVIEW12_ARB 0x872C
-#define GL_MODELVIEW13_ARB 0x872D
-#define GL_MODELVIEW14_ARB 0x872E
-#define GL_MODELVIEW15_ARB 0x872F
-#define GL_MODELVIEW16_ARB 0x8730
-#define GL_MODELVIEW17_ARB 0x8731
-#define GL_MODELVIEW18_ARB 0x8732
-#define GL_MODELVIEW19_ARB 0x8733
-#define GL_MODELVIEW20_ARB 0x8734
-#define GL_MODELVIEW21_ARB 0x8735
-#define GL_MODELVIEW22_ARB 0x8736
-#define GL_MODELVIEW23_ARB 0x8737
-#define GL_MODELVIEW24_ARB 0x8738
-#define GL_MODELVIEW25_ARB 0x8739
-#define GL_MODELVIEW26_ARB 0x873A
-#define GL_MODELVIEW27_ARB 0x873B
-#define GL_MODELVIEW28_ARB 0x873C
-#define GL_MODELVIEW29_ARB 0x873D
-#define GL_MODELVIEW30_ARB 0x873E
-#define GL_MODELVIEW31_ARB 0x873F
+#define GL_MESHVIEW2_ARB 0x8722
+#define GL_MESHVIEW3_ARB 0x8723
+#define GL_MESHVIEW4_ARB 0x8724
+#define GL_MESHVIEW5_ARB 0x8725
+#define GL_MESHVIEW6_ARB 0x8726
+#define GL_MESHVIEW7_ARB 0x8727
+#define GL_MESHVIEW8_ARB 0x8728
+#define GL_MESHVIEW9_ARB 0x8729
+#define GL_MESHVIEW10_ARB 0x872A
+#define GL_MESHVIEW11_ARB 0x872B
+#define GL_MESHVIEW12_ARB 0x872C
+#define GL_MESHVIEW13_ARB 0x872D
+#define GL_MESHVIEW14_ARB 0x872E
+#define GL_MESHVIEW15_ARB 0x872F
+#define GL_MESHVIEW16_ARB 0x8730
+#define GL_MESHVIEW17_ARB 0x8731
+#define GL_MESHVIEW18_ARB 0x8732
+#define GL_MESHVIEW19_ARB 0x8733
+#define GL_MESHVIEW20_ARB 0x8734
+#define GL_MESHVIEW21_ARB 0x8735
+#define GL_MESHVIEW22_ARB 0x8736
+#define GL_MESHVIEW23_ARB 0x8737
+#define GL_MESHVIEW24_ARB 0x8738
+#define GL_MESHVIEW25_ARB 0x8739
+#define GL_MESHVIEW26_ARB 0x873A
+#define GL_MESHVIEW27_ARB 0x873B
+#define GL_MESHVIEW28_ARB 0x873C
+#define GL_MESHVIEW29_ARB 0x873D
+#define GL_MESHVIEW30_ARB 0x873E
+#define GL_MESHVIEW31_ARB 0x873F
 
 typedef void (GLAPIENTRY * PFNGLVERTEXBLENDARBPROC) (GLint count);
 typedef void (GLAPIENTRY * PFNGLWEIGHTPOINTERARBPROC) (GLint size, GLenum type, GLsizei stride, void *pointer);
@@ -9566,18 +9566,18 @@ typedef void (GLAPIENTRY * PFNGLFOGCOORDFVEXTPROC) (const GLfloat *coord);
 #define GL_MAX_ACTIVE_LIGHTS_EXT 0x8405
 #define GL_CURRENT_RASTER_NORMAL_EXT 0x8406
 #define GL_LIGHT_ENV_MODE_EXT 0x8407
-#define GL_FRAGMENT_LIGHT_MODEL_LOCAL_VIEWER_EXT 0x8408
-#define GL_FRAGMENT_LIGHT_MODEL_TWO_SIDE_EXT 0x8409
-#define GL_FRAGMENT_LIGHT_MODEL_AMBIENT_EXT 0x840A
-#define GL_FRAGMENT_LIGHT_MODEL_NORMAL_INTERPOLATION_EXT 0x840B
+#define GL_FRAGMENT_LIGHT_MESH_LOCAL_VIEWER_EXT 0x8408
+#define GL_FRAGMENT_LIGHT_MESH_TWO_SIDE_EXT 0x8409
+#define GL_FRAGMENT_LIGHT_MESH_AMBIENT_EXT 0x840A
+#define GL_FRAGMENT_LIGHT_MESH_NORMAL_INTERPOLATION_EXT 0x840B
 #define GL_FRAGMENT_LIGHT0_EXT 0x840C
 #define GL_FRAGMENT_LIGHT7_EXT 0x8413
 
 typedef void (GLAPIENTRY * PFNGLFRAGMENTCOLORMATERIALEXTPROC) (GLenum face, GLenum mode);
-typedef void (GLAPIENTRY * PFNGLFRAGMENTLIGHTMODELFEXTPROC) (GLenum pname, GLfloat param);
-typedef void (GLAPIENTRY * PFNGLFRAGMENTLIGHTMODELFVEXTPROC) (GLenum pname, GLfloat* params);
-typedef void (GLAPIENTRY * PFNGLFRAGMENTLIGHTMODELIEXTPROC) (GLenum pname, GLint param);
-typedef void (GLAPIENTRY * PFNGLFRAGMENTLIGHTMODELIVEXTPROC) (GLenum pname, GLint* params);
+typedef void (GLAPIENTRY * PFNGLFRAGMENTLIGHTMESHFEXTPROC) (GLenum pname, GLfloat param);
+typedef void (GLAPIENTRY * PFNGLFRAGMENTLIGHTMESHFVEXTPROC) (GLenum pname, GLfloat* params);
+typedef void (GLAPIENTRY * PFNGLFRAGMENTLIGHTMESHIEXTPROC) (GLenum pname, GLint param);
+typedef void (GLAPIENTRY * PFNGLFRAGMENTLIGHTMESHIVEXTPROC) (GLenum pname, GLint* params);
 typedef void (GLAPIENTRY * PFNGLFRAGMENTLIGHTFEXTPROC) (GLenum light, GLenum pname, GLfloat param);
 typedef void (GLAPIENTRY * PFNGLFRAGMENTLIGHTFVEXTPROC) (GLenum light, GLenum pname, GLfloat* params);
 typedef void (GLAPIENTRY * PFNGLFRAGMENTLIGHTIEXTPROC) (GLenum light, GLenum pname, GLint param);
@@ -9593,10 +9593,10 @@ typedef void (GLAPIENTRY * PFNGLGETFRAGMENTMATERIALIVEXTPROC) (GLenum face, GLen
 typedef void (GLAPIENTRY * PFNGLLIGHTENVIEXTPROC) (GLenum pname, GLint param);
 
 #define glFragmentColorMaterialEXT GLEW_GET_FUN(__glewFragmentColorMaterialEXT)
-#define glFragmentLightModelfEXT GLEW_GET_FUN(__glewFragmentLightModelfEXT)
-#define glFragmentLightModelfvEXT GLEW_GET_FUN(__glewFragmentLightModelfvEXT)
-#define glFragmentLightModeliEXT GLEW_GET_FUN(__glewFragmentLightModeliEXT)
-#define glFragmentLightModelivEXT GLEW_GET_FUN(__glewFragmentLightModelivEXT)
+#define glFragmentLightMeshfEXT GLEW_GET_FUN(__glewFragmentLightMeshfEXT)
+#define glFragmentLightMeshfvEXT GLEW_GET_FUN(__glewFragmentLightMeshfvEXT)
+#define glFragmentLightMeshiEXT GLEW_GET_FUN(__glewFragmentLightMeshiEXT)
+#define glFragmentLightMeshivEXT GLEW_GET_FUN(__glewFragmentLightMeshivEXT)
 #define glFragmentLightfEXT GLEW_GET_FUN(__glewFragmentLightfEXT)
 #define glFragmentLightfvEXT GLEW_GET_FUN(__glewFragmentLightfvEXT)
 #define glFragmentLightiEXT GLEW_GET_FUN(__glewFragmentLightiEXT)
@@ -10458,7 +10458,7 @@ typedef void (GLAPIENTRY * PFNGLUSESHADERPROGRAMEXTPROC) (GLenum type, GLuint pr
 #ifndef GL_EXT_separate_specular_color
 #define GL_EXT_separate_specular_color 1
 
-#define GL_LIGHT_MODEL_COLOR_CONTROL_EXT 0x81F8
+#define GL_LIGHT_MESH_COLOR_CONTROL_EXT 0x81F8
 #define GL_SINGLE_COLOR_EXT 0x81F9
 #define GL_SEPARATE_SPECULAR_COLOR_EXT 0x81FA
 
@@ -11571,13 +11571,13 @@ typedef void (GLAPIENTRY * PFNGLWRITEMASKEXTPROC) (GLuint res, GLuint in, GLenum
 #ifndef GL_EXT_vertex_weighting
 #define GL_EXT_vertex_weighting 1
 
-#define GL_MODELVIEW0_STACK_DEPTH_EXT 0x0BA3
-#define GL_MODELVIEW0_MATRIX_EXT 0x0BA6
-#define GL_MODELVIEW0_EXT 0x1700
-#define GL_MODELVIEW1_STACK_DEPTH_EXT 0x8502
-#define GL_MODELVIEW1_MATRIX_EXT 0x8506
+#define GL_MESHVIEW0_STACK_DEPTH_EXT 0x0BA3
+#define GL_MESHVIEW0_MATRIX_EXT 0x0BA6
+#define GL_MESHVIEW0_EXT 0x1700
+#define GL_MESHVIEW1_STACK_DEPTH_EXT 0x8502
+#define GL_MESHVIEW1_MATRIX_EXT 0x8506
 #define GL_VERTEX_WEIGHTING_EXT 0x8509
-#define GL_MODELVIEW1_EXT 0x850A
+#define GL_MESHVIEW1_EXT 0x850A
 #define GL_CURRENT_VERTEX_WEIGHT_EXT 0x850B
 #define GL_VERTEX_WEIGHT_ARRAY_EXT 0x850C
 #define GL_VERTEX_WEIGHT_ARRAY_SIZE_EXT 0x850D
@@ -14640,7 +14640,7 @@ typedef void (GLAPIENTRY * PFNGLVERTEXFORMATNVPROC) (GLint size, GLenum type, GL
 #define GL_CURRENT_ATTRIB_NV 0x8626
 #define GL_PROGRAM_LENGTH_NV 0x8627
 #define GL_PROGRAM_STRING_NV 0x8628
-#define GL_MODELVIEW_PROJECTION_NV 0x8629
+#define GL_MESHVIEW_PROJECTION_NV 0x8629
 #define GL_IDENTITY_NV 0x862A
 #define GL_INVERSE_NV 0x862B
 #define GL_TRANSPOSE_NV 0x862C
@@ -15185,8 +15185,8 @@ typedef void (GLAPIENTRY * PFNGLFOGXPROC) (GLenum pname, GLfixed param);
 typedef void (GLAPIENTRY * PFNGLFOGXVPROC) (GLenum pname, const GLfixed* params);
 typedef void (GLAPIENTRY * PFNGLFRUSTUMFPROC) (GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar);
 typedef void (GLAPIENTRY * PFNGLFRUSTUMXPROC) (GLfixed left, GLfixed right, GLfixed bottom, GLfixed top, GLfixed zNear, GLfixed zFar);
-typedef void (GLAPIENTRY * PFNGLLIGHTMODELXPROC) (GLenum pname, GLfixed param);
-typedef void (GLAPIENTRY * PFNGLLIGHTMODELXVPROC) (GLenum pname, const GLfixed* params);
+typedef void (GLAPIENTRY * PFNGLLIGHTMESHXPROC) (GLenum pname, GLfixed param);
+typedef void (GLAPIENTRY * PFNGLLIGHTMESHXVPROC) (GLenum pname, const GLfixed* params);
 typedef void (GLAPIENTRY * PFNGLLIGHTXPROC) (GLenum light, GLenum pname, GLfixed param);
 typedef void (GLAPIENTRY * PFNGLLIGHTXVPROC) (GLenum light, GLenum pname, const GLfixed* params);
 typedef void (GLAPIENTRY * PFNGLLINEWIDTHXPROC) (GLfixed width);
@@ -15217,8 +15217,8 @@ typedef void (GLAPIENTRY * PFNGLTRANSLATEXPROC) (GLfixed x, GLfixed y, GLfixed z
 #define glFogxv GLEW_GET_FUN(__glewFogxv)
 #define glFrustumf GLEW_GET_FUN(__glewFrustumf)
 #define glFrustumx GLEW_GET_FUN(__glewFrustumx)
-#define glLightModelx GLEW_GET_FUN(__glewLightModelx)
-#define glLightModelxv GLEW_GET_FUN(__glewLightModelxv)
+#define glLightMeshx GLEW_GET_FUN(__glewLightMeshx)
+#define glLightMeshxv GLEW_GET_FUN(__glewLightMeshxv)
 #define glLightx GLEW_GET_FUN(__glewLightx)
 #define glLightxv GLEW_GET_FUN(__glewLightxv)
 #define glLineWidthx GLEW_GET_FUN(__glewLineWidthx)
@@ -15751,10 +15751,10 @@ typedef void (GLAPIENTRY * PFNGLTEXTUREFOGSGIXPROC) (GLenum pname);
 #define GL_SGIX_fragment_specular_lighting 1
 
 typedef void (GLAPIENTRY * PFNGLFRAGMENTCOLORMATERIALSGIXPROC) (GLenum face, GLenum mode);
-typedef void (GLAPIENTRY * PFNGLFRAGMENTLIGHTMODELFSGIXPROC) (GLenum pname, GLfloat param);
-typedef void (GLAPIENTRY * PFNGLFRAGMENTLIGHTMODELFVSGIXPROC) (GLenum pname, GLfloat* params);
-typedef void (GLAPIENTRY * PFNGLFRAGMENTLIGHTMODELISGIXPROC) (GLenum pname, GLint param);
-typedef void (GLAPIENTRY * PFNGLFRAGMENTLIGHTMODELIVSGIXPROC) (GLenum pname, GLint* params);
+typedef void (GLAPIENTRY * PFNGLFRAGMENTLIGHTMESHFSGIXPROC) (GLenum pname, GLfloat param);
+typedef void (GLAPIENTRY * PFNGLFRAGMENTLIGHTMESHFVSGIXPROC) (GLenum pname, GLfloat* params);
+typedef void (GLAPIENTRY * PFNGLFRAGMENTLIGHTMESHISGIXPROC) (GLenum pname, GLint param);
+typedef void (GLAPIENTRY * PFNGLFRAGMENTLIGHTMESHIVSGIXPROC) (GLenum pname, GLint* params);
 typedef void (GLAPIENTRY * PFNGLFRAGMENTLIGHTFSGIXPROC) (GLenum light, GLenum pname, GLfloat param);
 typedef void (GLAPIENTRY * PFNGLFRAGMENTLIGHTFVSGIXPROC) (GLenum light, GLenum pname, GLfloat* params);
 typedef void (GLAPIENTRY * PFNGLFRAGMENTLIGHTISGIXPROC) (GLenum light, GLenum pname, GLint param);
@@ -15769,10 +15769,10 @@ typedef void (GLAPIENTRY * PFNGLGETFRAGMENTMATERIALFVSGIXPROC) (GLenum face, GLe
 typedef void (GLAPIENTRY * PFNGLGETFRAGMENTMATERIALIVSGIXPROC) (GLenum face, GLenum pname, const GLint* data);
 
 #define glFragmentColorMaterialSGIX GLEW_GET_FUN(__glewFragmentColorMaterialSGIX)
-#define glFragmentLightModelfSGIX GLEW_GET_FUN(__glewFragmentLightModelfSGIX)
-#define glFragmentLightModelfvSGIX GLEW_GET_FUN(__glewFragmentLightModelfvSGIX)
-#define glFragmentLightModeliSGIX GLEW_GET_FUN(__glewFragmentLightModeliSGIX)
-#define glFragmentLightModelivSGIX GLEW_GET_FUN(__glewFragmentLightModelivSGIX)
+#define glFragmentLightMeshfSGIX GLEW_GET_FUN(__glewFragmentLightMeshfSGIX)
+#define glFragmentLightMeshfvSGIX GLEW_GET_FUN(__glewFragmentLightMeshfvSGIX)
+#define glFragmentLightMeshiSGIX GLEW_GET_FUN(__glewFragmentLightMeshiSGIX)
+#define glFragmentLightMeshivSGIX GLEW_GET_FUN(__glewFragmentLightMeshivSGIX)
 #define glFragmentLightfSGIX GLEW_GET_FUN(__glewFragmentLightfSGIX)
 #define glFragmentLightfvSGIX GLEW_GET_FUN(__glewFragmentLightfvSGIX)
 #define glFragmentLightiSGIX GLEW_GET_FUN(__glewFragmentLightiSGIX)
@@ -18055,10 +18055,10 @@ GLEW_FUN_EXPORT PFNGLFOGCOORDFEXTPROC __glewFogCoordfEXT;
 GLEW_FUN_EXPORT PFNGLFOGCOORDFVEXTPROC __glewFogCoordfvEXT;
 
 GLEW_FUN_EXPORT PFNGLFRAGMENTCOLORMATERIALEXTPROC __glewFragmentColorMaterialEXT;
-GLEW_FUN_EXPORT PFNGLFRAGMENTLIGHTMODELFEXTPROC __glewFragmentLightModelfEXT;
-GLEW_FUN_EXPORT PFNGLFRAGMENTLIGHTMODELFVEXTPROC __glewFragmentLightModelfvEXT;
-GLEW_FUN_EXPORT PFNGLFRAGMENTLIGHTMODELIEXTPROC __glewFragmentLightModeliEXT;
-GLEW_FUN_EXPORT PFNGLFRAGMENTLIGHTMODELIVEXTPROC __glewFragmentLightModelivEXT;
+GLEW_FUN_EXPORT PFNGLFRAGMENTLIGHTMESHFEXTPROC __glewFragmentLightMeshfEXT;
+GLEW_FUN_EXPORT PFNGLFRAGMENTLIGHTMESHFVEXTPROC __glewFragmentLightMeshfvEXT;
+GLEW_FUN_EXPORT PFNGLFRAGMENTLIGHTMESHIEXTPROC __glewFragmentLightMeshiEXT;
+GLEW_FUN_EXPORT PFNGLFRAGMENTLIGHTMESHIVEXTPROC __glewFragmentLightMeshivEXT;
 GLEW_FUN_EXPORT PFNGLFRAGMENTLIGHTFEXTPROC __glewFragmentLightfEXT;
 GLEW_FUN_EXPORT PFNGLFRAGMENTLIGHTFVEXTPROC __glewFragmentLightfvEXT;
 GLEW_FUN_EXPORT PFNGLFRAGMENTLIGHTIEXTPROC __glewFragmentLightiEXT;
@@ -18894,8 +18894,8 @@ GLEW_FUN_EXPORT PFNGLFOGXPROC __glewFogx;
 GLEW_FUN_EXPORT PFNGLFOGXVPROC __glewFogxv;
 GLEW_FUN_EXPORT PFNGLFRUSTUMFPROC __glewFrustumf;
 GLEW_FUN_EXPORT PFNGLFRUSTUMXPROC __glewFrustumx;
-GLEW_FUN_EXPORT PFNGLLIGHTMODELXPROC __glewLightModelx;
-GLEW_FUN_EXPORT PFNGLLIGHTMODELXVPROC __glewLightModelxv;
+GLEW_FUN_EXPORT PFNGLLIGHTMESHXPROC __glewLightMeshx;
+GLEW_FUN_EXPORT PFNGLLIGHTMESHXVPROC __glewLightMeshxv;
 GLEW_FUN_EXPORT PFNGLLIGHTXPROC __glewLightx;
 GLEW_FUN_EXPORT PFNGLLIGHTXVPROC __glewLightxv;
 GLEW_FUN_EXPORT PFNGLLINEWIDTHXPROC __glewLineWidthx;
@@ -18970,10 +18970,10 @@ GLEW_FUN_EXPORT PFNGLFLUSHRASTERSGIXPROC __glewFlushRasterSGIX;
 GLEW_FUN_EXPORT PFNGLTEXTUREFOGSGIXPROC __glewTextureFogSGIX;
 
 GLEW_FUN_EXPORT PFNGLFRAGMENTCOLORMATERIALSGIXPROC __glewFragmentColorMaterialSGIX;
-GLEW_FUN_EXPORT PFNGLFRAGMENTLIGHTMODELFSGIXPROC __glewFragmentLightModelfSGIX;
-GLEW_FUN_EXPORT PFNGLFRAGMENTLIGHTMODELFVSGIXPROC __glewFragmentLightModelfvSGIX;
-GLEW_FUN_EXPORT PFNGLFRAGMENTLIGHTMODELISGIXPROC __glewFragmentLightModeliSGIX;
-GLEW_FUN_EXPORT PFNGLFRAGMENTLIGHTMODELIVSGIXPROC __glewFragmentLightModelivSGIX;
+GLEW_FUN_EXPORT PFNGLFRAGMENTLIGHTMESHFSGIXPROC __glewFragmentLightMeshfSGIX;
+GLEW_FUN_EXPORT PFNGLFRAGMENTLIGHTMESHFVSGIXPROC __glewFragmentLightMeshfvSGIX;
+GLEW_FUN_EXPORT PFNGLFRAGMENTLIGHTMESHISGIXPROC __glewFragmentLightMeshiSGIX;
+GLEW_FUN_EXPORT PFNGLFRAGMENTLIGHTMESHIVSGIXPROC __glewFragmentLightMeshivSGIX;
 GLEW_FUN_EXPORT PFNGLFRAGMENTLIGHTFSGIXPROC __glewFragmentLightfSGIX;
 GLEW_FUN_EXPORT PFNGLFRAGMENTLIGHTFVSGIXPROC __glewFragmentLightfvSGIX;
 GLEW_FUN_EXPORT PFNGLFRAGMENTLIGHTISGIXPROC __glewFragmentLightiSGIX;
