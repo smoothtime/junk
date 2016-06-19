@@ -160,7 +160,7 @@ Octree::checkCollisions(Entity *entityArray, Entity* entity, uint32 *collisionIn
                 if(toCheck->index)
                 {
 
-                    if(doBoundsCollide(entity->aabb, entityArray[toCheck->index].aabb)
+                    if(doBoundsCollide(entity->model->aabb, entityArray[toCheck->index].model->aabb)
                        && *collisionsSoFar < numChecks
                        && !alreadyCollided(collisionIndices, numChecks, toCheck->index)) //don't want to collide with same entity stretching across multiple children
                     { 
@@ -174,7 +174,7 @@ Octree::checkCollisions(Entity *entityArray, Entity* entity, uint32 *collisionIn
     }
     else
     {
-        uint8 collidedChildren = whichChildren(entity->aabb);
+        uint8 collidedChildren = whichChildren(entity->model->aabb);
         for(int32 i = 0; i < 8; ++i)
         {
             if((collidedChildren >> i) & 1)
@@ -236,7 +236,7 @@ Octree::whichChildren(AABBox bounds)
 inline void
 Octree::insertToCollidedChildren(Entity *entity, MemoryArena *memArena)
 {
-    uint8 toInsert = whichChildren(entity->aabb);
+    uint8 toInsert = whichChildren(entity->model->aabb);
     for(int32 i = 0; i < 8; ++i)
     {
         if((toInsert >> i) & 1)

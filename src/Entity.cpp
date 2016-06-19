@@ -8,7 +8,7 @@
 #include "Entity.h"
 
 AABBox
-createBaseAABBox(Entity *ent, Mesh *model)
+createBaseAABBox(Mesh *model)
 {
     glm::vec3 minBounds = model->vertices[0].pos;
     glm::vec3 maxBounds = minBounds;

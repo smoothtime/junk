@@ -128,6 +128,11 @@ FREE_FILE(psFreeFile)
     }
 }
 
+PLATFORM_LOG(osxLog)
+{
+    fprintf(stdout, "%s\n", msg);
+}
+
 READ_ENTIRE_FILE(psReadEntireFile)
 {
     // do this later
@@ -148,8 +153,8 @@ READ_ENTIRE_FILE(psReadEntireFile)
 int32
 main(int32 argc, char **argv)
 {
-    uint32 windowWidth = 200;
-    uint32 windowHeight = 150;
+    uint32 windowWidth = 800;
+    uint32 windowHeight = 600;
     printf("welcome\n");
     if(!glfwInit())
     {
@@ -182,6 +187,7 @@ main(int32 argc, char **argv)
     GameMemory memory = {};
     memory.isInitialized = false;
     memory.platformServiceReadFile = psReadEntireFile;
+    memory.log = osxLog;
     memory.permanentStorageSize = Megabytes(256);
     memory.transientStorageSize = Gigabytes(1);
     uint64 totalSize = memory.permanentStorageSize + memory.transientStorageSize;

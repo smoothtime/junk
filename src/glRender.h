@@ -26,25 +26,17 @@ struct RenderReferences {
     GLuint *EBOs;
 };
 
-struct RenderReferenceIndex {
-    uint32 shaderIndex;
-    uint32 textureIndex;
-    uint32 VAOIndex;
-    uint32 VBOIndex;
-    uint32 EBOIndex;
-    uint32 numIndices;
-};
-
-void
+uint32
 initShader(RenderReferences *rendRefs, const char *vShaderPath, const char *fShaderPath)
 {
     assert(rendRefs->numShaders <  rendRefs->maxObjects -1);
     rendRefs->shaders[rendRefs->numShaders] = Shader(vShaderPath,  fShaderPath);
-    rendRefs->numShaders++;
+
+    return rendRefs->numShaders++;
 }
 
 // TODO(james): make the texture properties passed in
-void
+uint32
 initTexture(RenderReferences *rendRefs, const char *texturePath)
 {
     int32 x, y, n;
@@ -62,11 +54,11 @@ initTexture(RenderReferences *rendRefs, const char *texturePath)
     glBindTexture(GL_TEXTURE_2D, 0);
     stbi_image_free(imageData);
 
-    rendRefs->numTextures++;
+    return rendRefs->numTextures++;
 }
 
 //TODO(james): make it so you can pass in parameters like GL_STATIC_DRAW, etc
-void
+uint32
 initVertexIndexBuffers(RenderReferences *rendRefs, Mesh *mesh)
 {
     
@@ -92,6 +84,11 @@ initVertexIndexBuffers(RenderReferences *rendRefs, Mesh *mesh)
     rendRefs->numVAOs++;
     rendRefs->numVBOs++;
     rendRefs->numEBOs++;
+
+    assert(rendRefs->numVAOs == rendRefs->numVBOs);
+    assert(rendRefs->numVAOs == rendRefs->numEBOs);
+
+    return rendRefs->numVAOs - 1;
 }
 
 void

@@ -59,16 +59,26 @@ struct GameState
     uint32 entityCount;
     Octree *staticEntityTree;
     Camera camera;
+    uint32 maxModels;
     uint32 numModels;
     Model *models;
-    uint32 maxModels;    
     RenderReferences *rendRefs;
 
     real64 deltaTime;
 };
 
+#include "hackyVisualization.h"
+
+struct readMeshListEntry
+{
+    Mesh **entry;
+    readMeshListEntry *next;
+};
+
 Model *
-loadModel(thread_context *thread, GameState *gameState, platformServiceReadEntireFile *psRF, const char *relPath)
+loadModel(thread_context *thread, GameState *gameState,
+          platformServiceReadEntireFile *psRF, const char *relPath,
+          bool32 isCollisionMesh)
 {
     const uint16 CHUNK_MAIN                = 0x4d4d;
     const uint16 CHUNK_3D_EDITOR           = 0x3d3d;
@@ -79,15 +89,24 @@ loadModel(thread_context *thread, GameState *gameState, platformServiceReadEntir
     const uint16 CHUNK_MAPPING_COORDINATES = 0x4140;
     const uint16 CHUNK_MATERIAL_BLOCK      = 0xafff;
 
-    Model *model = gameState->models + gameState->numModels;
-    read_file loadedMesh = psRF(thread, relPath);
+    GeneralAllocator *alctr = gameState->assetAlctr;
+    Model *result = gameState->models + gameState->numModels;
+    
+    uint32 meshCount = 0;
+    readMeshListEntry *first = NEW(alctr, readMeshListEntry);
+    readMeshListEntry *current = first;
+
+    Mesh *currentMesh = NEW(alctr, Mesh);
+    current->entry = &currentMesh;
+    
+    read_file loadedFile = psRF(thread, relPath);
     // Parse file
     uint16 *chunkId;
     uint32 *chunkLength;
     uint16 *count;
     uint16 *faceFlags;
-    uint8 *readP = (uint8 *)loadedMesh.memory;
-    while(readP < (uint8 *)loadedMesh.memory + loadedMesh.size)
+    uint8 *readP = (uint8 *)loadedFile.memory;
+    while(readP < (uint8 *)loadedFile.memory + loadedFile.size)
     {
         chunkId = (uint16 *)readP;
         readP += sizeof(uint16);
@@ -112,17 +131,24 @@ loadModel(thread_context *thread, GameState *gameState, platformServiceReadEntir
             
             case CHUNK_TRIANGULAR_MESH:
                 // read children
+                if(meshCount++ > 0)
+                {
+                    current->next = NEW(alctr, readMeshListEntry);
+                    current = current->next;
+                    currentMesh = NEW(alctr, Mesh);
+                    current->entry = &currentMesh; 
+                }
                 break;
                 
             case CHUNK_VERTICES_LIST:
             {
                 count = (uint16 *)readP;
                 readP += sizeof(uint16);
-                model->baseMesh.numVerts = (uint32) *count;
-                model->baseMesh.vertices = (Vertex *) gameState->assetAlctr->alloc(sizeof(Vertex) * model->baseMesh.numVerts);
+                currentMesh->numVerts = (uint32) *count;
+                currentMesh->vertices = (Vertex *) gameState->assetAlctr->alloc(sizeof(Vertex) * currentMesh->numVerts);
                 for(int32 i = 0; i < *count; ++i)
                 {
-                    model->baseMesh.vertices[i].pos = glm::vec3( *((real32 *)readP + 0),
+                    currentMesh->vertices[i].pos = glm::vec3( *((real32 *)readP + 0),
                                                         *((real32 *)readP + 1),
                                                         *((real32 *)readP + 2)
                                                       );
@@ -134,13 +160,13 @@ loadModel(thread_context *thread, GameState *gameState, platformServiceReadEntir
             case CHUNK_FACE_LIST:
                 count = (uint16 *)readP;
                 readP += sizeof(uint16);
-                model->baseMesh.numIndices = (uint32)(*count * 3);
-                model->baseMesh.indices = (uint32 *) gameState->assetAlctr->alloc(sizeof(uint32) * model->baseMesh.numIndices);
-                for(uint32 i = 0; i < model->baseMesh.numIndices; i+=3)
+                currentMesh->numIndices = (uint32)(*count * 3);
+                currentMesh->indices = (uint32 *) gameState->assetAlctr->alloc(sizeof(uint32) * currentMesh->numIndices);
+                for(uint32 i = 0; i < currentMesh->numIndices; i+=3)
                 {
-                    model->baseMesh.indices[i + 0] = (uint32)*((uint16 *)readP);
-                    model->baseMesh.indices[i + 1] = (uint32)*((uint16 *)readP + 1);
-                    model->baseMesh.indices[i + 2] = (uint32)*((uint16 *)readP + 2);
+                    currentMesh->indices[i + 0] = (uint32)*((uint16 *)readP);
+                    currentMesh->indices[i + 1] = (uint32)*((uint16 *)readP + 1);
+                    currentMesh->indices[i + 2] = (uint32)*((uint16 *)readP + 2);
                     // pass a not important face flag
                     faceFlags = (uint16 *) readP;
                     readP += 4 * sizeof(uint16);
@@ -150,9 +176,9 @@ loadModel(thread_context *thread, GameState *gameState, platformServiceReadEntir
             case CHUNK_MAPPING_COORDINATES:
                 count = (uint16 *)readP;
                 readP += sizeof(uint16);
-                for(uint32 i = 0; i < model->baseMesh.numVerts; ++i)
+                for(uint32 i = 0; i < currentMesh->numVerts; ++i)
                 {
-                    model->baseMesh.vertices[i].texCoords = glm::vec2( *((real32 *)readP + 0),
+                    currentMesh->vertices[i].texCoords = glm::vec2( *((real32 *)readP + 0),
                                                               *((real32 *)readP + 1)
                                                            );
                     readP += 2 * sizeof(real32);
@@ -168,52 +194,88 @@ loadModel(thread_context *thread, GameState *gameState, platformServiceReadEntir
                 readP += (*chunkLength - 6); // -6 for the header we've read already
         }
     }
-    model->worldMesh.numVerts = model->baseMesh.numVerts;
-    model->worldMesh.numIndices = model->baseMesh.numIndices;
-    model->worldMesh.vertices = (Vertex *) gameState->assetAlctr->alloc(sizeof(Vertex) * model->baseMesh.numVerts);
-    model->worldMesh.indices = (uint32 *) gameState->assetAlctr->alloc(sizeof(uint32) * model->baseMesh.numIndices);
 
+    if(!isCollisionMesh)
+    {
+        result->numRenderMesh = meshCount;
+        result->renderMeshes = (RenderMesh *) alctr->alloc(sizeof(Mesh) * meshCount);
+        current = first;
+        for(uint32 i = 0; i < meshCount; ++i)
+        {
+            RenderMesh *renderMesh = result->renderMeshes + i;
+            renderMesh->mesh = *(current->entry);
+            readMeshListEntry *tmp = current->next;
+            alctr->dealloc(current);
+            current = tmp;
+        }
+        assert(current == 0);
+
+    }
+    else
+    {
+        
+        result->numCollisionMesh = meshCount;
+        result->collisionMeshes = (CollisionMeshPair *) alctr->alloc(sizeof(CollisionMeshPair) * meshCount);
+        current = first;
+        for(uint32 i = 0; i < meshCount; ++i)
+        {
+            result->collisionMeshes[i].baseMesh = *(current->entry);
+            Mesh *bm = result->collisionMeshes[i].baseMesh;
+            readMeshListEntry *tmp = current->next;
+            alctr->dealloc(current);
+            current = tmp;
+
+            result->collisionMeshes[i].worldMesh = NEW(alctr, Mesh);
+            Mesh *wm = result->collisionMeshes[i].worldMesh;
+            wm->numVerts = bm->numVerts;
+            wm->numIndices = bm->numIndices;
+            wm->vertices = (Vertex *) alctr->alloc(sizeof(Vertex) * bm->numVerts);
+            wm->indices = (uint32 *) alctr->alloc(sizeof(uint32) * bm->numIndices);
+        }
+        assert(current == 0);
+    }
+    
 #define RETARDED_CUBE_3DS 0
 #if RETARDED_CUBE_3DS
-    for(uint32 i = 0; i < model->baseMesh.numIndices; ++i)
+    for(uint32 i = 0; i < currentMesh->numIndices; ++i)
     {
-        switch(model->baseMesh.indices[i])
+        switch(currentMesh->indices[i])
         {
             case 0:
             case 1:
-                model->baseMesh.indices[i] = 0;
+                currentMesh->indices[i] = 0;
                 break;
             case 2:
             case 3:
             case 4:
-                model->baseMesh.indices[i] = 2;
+                currentMesh->indices[i] = 2;
                 break;
             case 5:
             case 6:
             case 7:
-                model->baseMesh.indices[i] = 5;
+                currentMesh->indices[i] = 5;
                 break;
             case 8:
             case 9:
             case 10:
-                model->baseMesh.indices[i] = 8;
+                currentMesh->indices[i] = 8;
                 break;
             case 11:
-                model->baseMesh.indices[i] = 11;
+                currentMesh->indices[i] = 11;
                 break;
             case 12:
             case 13:
             case 14:
-                model->baseMesh.indices[i] = 12;
+                currentMesh->indices[i] = 12;
                 break;
             case 15:
             case 16:
             case 17:
-                model->baseMesh.indices[i] = 15;
+                currentMesh->indices[i] = 15;
                 break;
             case 18:
             case 19:
-                model->baseMesh.indices[i] = 18;
+                currentMesh->indices[i] = 18;
                 break;
             default:
                 break;
@@ -222,7 +284,7 @@ loadModel(thread_context *thread, GameState *gameState, platformServiceReadEntir
     }
 #endif
         
-    return model;
+    return result;
 }
 
 #define GAME_H

@@ -68,12 +68,25 @@ GAME_UPDATE(gameUpdate)
         gameState->models = (Model *) gameState->assetAlctr->alloc(sizeof(Model) * gameState->maxModels);
 
         // hardcoded test model and textures
-        Model *model = loadModel(thread, gameState, memory->platformServiceReadFile, "../data/convex.3ds");
-        assert(model->baseMesh.numVerts != 0);
-        initShader(gameState->rendRefs, "../data/vshader_1.vs", "../data/fshader_1.fs");
-        initTexture(gameState->rendRefs, "../data/wall.jpg");
-        initVertexIndexBuffers(gameState->rendRefs, &model->baseMesh);
+        Model *model = loadModel(thread, gameState, memory->platformServiceReadFile, "../data/cube.3ds", false);
+        model = loadModel(thread, gameState, memory->platformServiceReadFile, "../data/cube.3ds", true);
+        gameState->numModels++;
 
+        assert(model->numRenderMesh > 0);
+        assert(model->numCollisionMesh > 0);
+        assert(model->renderMeshes->mesh->numVerts != 0);
+        assert(model->collisionMeshes->baseMesh->numVerts != 0);
+        assert(model->collisionMeshes->worldMesh->numVerts != 0);
+
+        for(uint32 meshIdx = 0; meshIdx < model->numRenderMesh; ++meshIdx)
+        {
+            Mesh *m = model->renderMeshes[meshIdx].mesh;
+            uint32 sIdx = initShader(gameState->rendRefs, "../data/vshader_1.vs", "../data/fshader_1.fs");
+            uint32 tIdx = initTexture(gameState->rendRefs, "../data/wall.jpg");
+            uint32 vIdx = initVertexIndexBuffers(gameState->rendRefs, m);
+            model->renderMeshes[meshIdx].rri = { sIdx, tIdx, vIdx, vIdx, vIdx, m->numIndices };
+        }
+        
         gameState->entityCount = 5;
         for(uint32 x = 0; x < 5; ++x)
         {
@@ -83,9 +96,14 @@ GAME_UPDATE(gameUpdate)
             ent->position = glm::vec3(3.5f * x, 0.0f, -3.0f);
             ent->transMtx = glm::translate(glm::mat4(), ent->position);
             ent->rotMtx = glm::mat4(1);
-            ent->renderInfo = { 0, 0, 0, 0, 0, model->baseMesh.numIndices };
-            ent->aabb = createBaseAABBox(ent, &model->baseMesh);
             ent->model = model;
+
+            for(uint32 cmIdx = 0; cmIdx < model->numCollisionMesh; ++cmIdx)
+            {
+                Mesh *m = model->collisionMeshes[cmIdx].baseMesh;
+                // TODO(james) IMPORTANT(james): make an AABB by looking over all meshes in model
+                model->aabb = createBaseAABBox(m);
+            }
         }
     }
     else if(reloadExtensions)
@@ -168,89 +186,9 @@ GAME_UPDATE(gameUpdate)
                                        glmModel, glmProjection);
         if(input->newLeftClick)
         {
-            Model *clickVisModel = gameState->models + 1;
-            Mesh *clickVis = &clickVisModel->baseMesh;
-            clickVis->numVerts = 8;
-            clickVis->vertices = (Vertex *) gameState->assetAlctr->alloc(sizeof(Vertex) * 8);
-            clickVisModel->worldMesh.numVerts = clickVis->numVerts;
-            clickVisModel->worldMesh.vertices = (Vertex *) gameState->assetAlctr->alloc(sizeof(Vertex) * clickVis->numVerts);
-
-            clickVis->vertices[0].pos = cam->position + (-0.05f * cam->right) +  (0.05f * cam->up)  + glm::vec3(rayDir);
-            clickVis->vertices[1].pos = cam->position + (0.05f * cam->right) +  (0.05f * cam->up)   + glm::vec3(rayDir);
-            clickVis->vertices[2].pos = cam->position + (-0.05f * cam->right) +  (-0.05f * cam->up) + glm::vec3(rayDir);
-            clickVis->vertices[3].pos = cam->position + (0.05f * cam->right) +  (-0.05f * cam->up)  + glm::vec3(rayDir);
-            clickVis->vertices[4].pos = clickVis->vertices[0].pos  + 5.0f * glm::vec3(rayDir);
-            clickVis->vertices[5].pos = clickVis->vertices[1].pos  + 5.0f * glm::vec3(rayDir);
-            clickVis->vertices[6].pos = clickVis->vertices[2].pos  + 5.0f * glm::vec3(rayDir);
-            clickVis->vertices[7].pos = clickVis->vertices[3].pos  + 5.0f * glm::vec3(rayDir);
-
-            for(uint8 i = 0;
-                i < 8;
-                ++i)
-            {
-                clickVis->vertices[i].pos += glm::vec3(-.0f, 0.0f, 0.0f);
-            }
-            
-            clickVis->numIndices = 36;
-            clickVis->indices = (uint32 *) gameState->assetAlctr->alloc(sizeof(uint32) * 36);
-            clickVisModel->worldMesh.numIndices = clickVis->numIndices;
-            clickVisModel->worldMesh.indices = (uint32 *) gameState->assetAlctr->alloc(sizeof(uint32) * clickVis->numIndices);
-
-            clickVis->indices[0] = 0;
-            clickVis->indices[1] = 1;
-            clickVis->indices[2] = 2;
-            clickVis->indices[3] = 2;
-            clickVis->indices[4] = 1;
-            clickVis->indices[5] = 3;
-            clickVis->indices[6] = 3;
-            clickVis->indices[7] = 1;
-            clickVis->indices[8] = 5;
-            clickVis->indices[9] = 5;
-            clickVis->indices[10] = 7;
-            clickVis->indices[11] = 3;
-            clickVis->indices[12] = 3;
-            clickVis->indices[13] = 7;
-            clickVis->indices[14] = 2;
-            clickVis->indices[15] = 2;
-            clickVis->indices[16] = 7;
-            clickVis->indices[17] = 6;
-            clickVis->indices[18] = 6;
-            clickVis->indices[19] = 7;
-            clickVis->indices[20] = 5;
-            clickVis->indices[21] = 5;
-            clickVis->indices[22] = 4;
-            clickVis->indices[23] = 6;
-            clickVis->indices[24] = 6;
-            clickVis->indices[25] = 4;
-            clickVis->indices[26] = 0;
-            clickVis->indices[27] = 0;
-            clickVis->indices[28] = 2;
-            clickVis->indices[29] = 6;
-            clickVis->indices[30] = 0;
-            clickVis->indices[31] = 4;
-            clickVis->indices[32] = 1;
-            clickVis->indices[33] = 1;
-            clickVis->indices[34] = 4;
-            clickVis->indices[35] = 5;
-            
-            if(gameState->rendRefs->VAOs[1] == 0)
-            {
-                initVertexIndexBuffers(gameState->rendRefs, clickVis);
-                gameState->staticEntities[5] = {};
-            }
-            else
-            {
-                RenderReferenceIndex toClear = { 1, 1, 1, 1, 1 };
-                overrideVertexBuffers(gameState->rendRefs, toClear, clickVis);
-            }
-            gameState->staticEntities[5].model = clickVisModel;
-            gameState->staticEntities[5].aabb = createBaseAABBox(&gameState->staticEntities[5], clickVis);
-            AABBox what = gameState->staticEntities[5].aabb;
-            assert(what.minBound.x < what.maxBound.x);
-            assert(what.minBound.y < what.maxBound.y);
-            assert(what.minBound.z < what.maxBound.z);
+            initHackyVisModel(gameState, cam, rayDir);
         }
-
+        
         Entity *hackyVisEnt = gameState->staticEntities + 5;
 
         // Simulate
@@ -259,31 +197,36 @@ GAME_UPDATE(gameUpdate)
             x++)
         {
             Entity *ent = &gameState->staticEntities[x];
-
-            AABBox box1 = transformAABB(ent->transMtx * ent->rotMtx, &ent->aabb);
-            AABBox box2 = hackyVisEnt->aabb;
-            if(hackyVisEnt->model != 0)//doBoundsCollide(box1, box2))
+            if(hackyVisEnt->model != 0)// && doBoundsCollide(box1, box2))
             {
-                transformMesh(ent->transMtx, &ent->model->baseMesh, &ent->model->worldMesh);
-                if(genericGJK(&ent->model->worldMesh, &hackyVisEnt->model->baseMesh))
+                AABBox box1 = transformAABB(ent->transMtx * ent->rotMtx, &ent->model->aabb);
+                AABBox box2 = hackyVisEnt->model->aabb;
+                for(uint32 meshIdx = 0;
+                    meshIdx < ent->model->numCollisionMesh;
+                    ++meshIdx)
                 {
+                    CollisionMeshPair cmp = ent->model->collisionMeshes[meshIdx];
+                    transformMesh(ent->transMtx, cmp.baseMesh, cmp.worldMesh);
+                    if(genericGJK(cmp.worldMesh, hackyVisEnt->model->collisionMeshes->baseMesh))
+                    {
 
-                    glm::vec3 delta = glm::vec3(0.0f, 0.0f, 0.01f) ;
+                        glm::vec3 delta = glm::vec3(0.0f, 0.0f, 0.01f) ;
 
-                    ent->position += delta;
-                    ent->transMtx = glm::translate(ent->transMtx, delta);
-                }
-                else
-                {
-                    uint32 notColliding = 1;
+                        ent->position += delta;
+                        ent->transMtx = glm::translate(ent->transMtx, delta);
+                        break;
+                    }
+                    else
+                    {
+                        uint32 notColliding = 1;
+                    }
                 }
             }
             // ent->rotMtx = glm::rotate(ent->rotMtx, (GLfloat)gameState->deltaTime, glm::vec3(1.0f, 0.0f, 0.0f));
             
-            real32 dummy = ent->aabb.minBound.x;
+            real32 dummy = ent->model->aabb.minBound.x;
 
         }
-        //testGJK(gameState->assetAlctr);
         
         // Render
         glEnable(GL_DEPTH_TEST);
@@ -298,28 +241,34 @@ GAME_UPDATE(gameUpdate)
         {
             Entity *entity = gameState->staticEntities + x;
             glmModel = entity->transMtx * entity->rotMtx;
-            GLuint shaderProgram = rr->shaders[entity->renderInfo.shaderIndex].program;
-            glUseProgram(shaderProgram);
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, rr->textures[entity->renderInfo.textureIndex]);
-            glUniform1i(glGetUniformLocation(shaderProgram, "ourTexture1"), 0);
+            for(uint32 m = 0;
+                m < entity->model->numRenderMesh;
+                ++m)
+            {
+                RenderMesh *rm = entity->model->renderMeshes + m;
+                GLuint shaderProgram = rr->shaders[rm->rri.shaderIndex].program;
+                glUseProgram(shaderProgram);
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, rr->textures[rm->rri.textureIndex]);
+                glUniform1i(glGetUniformLocation(shaderProgram, "ourTexture1"), 0);
 
-            GLint modelMatrix = glGetUniformLocation(shaderProgram, "model");
-            GLint viewMatrix = glGetUniformLocation(shaderProgram, "view");
-            GLint projMatrix = glGetUniformLocation(shaderProgram, "projection");
+                GLint modelMatrix = glGetUniformLocation(shaderProgram, "model");
+                GLint viewMatrix = glGetUniformLocation(shaderProgram, "view");
+                GLint projMatrix = glGetUniformLocation(shaderProgram, "projection");
         
-            glUniformMatrix4fv(modelMatrix, 1, GL_FALSE, glm::value_ptr(glmModel));
-            glUniformMatrix4fv(viewMatrix, 1, GL_FALSE, glm::value_ptr(glmView));
-            glUniformMatrix4fv(projMatrix, 1, GL_FALSE, glm::value_ptr(glmProjection));
+                glUniformMatrix4fv(modelMatrix, 1, GL_FALSE, glm::value_ptr(glmModel));
+                glUniformMatrix4fv(viewMatrix, 1, GL_FALSE, glm::value_ptr(glmView));
+                glUniformMatrix4fv(projMatrix, 1, GL_FALSE, glm::value_ptr(glmProjection));
             
-            glBindVertexArray(rr->VAOs[entity->renderInfo.VAOIndex]);
-            glDrawElements(GL_TRIANGLES, entity->renderInfo.numIndices, GL_UNSIGNED_INT, 0);
-            glBindTexture(GL_TEXTURE_2D, 0);
-            glBindVertexArray(0);
-            //        glEnable(GL_BLEND);
-            //        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            //        glDisable(GL_BLEND);
-            glUseProgram(0);
+                glBindVertexArray(rr->VAOs[rm->rri.VAOIndex]);
+                glDrawElements(GL_TRIANGLES, rm->rri.numIndices, GL_UNSIGNED_INT, 0);
+                glBindTexture(GL_TEXTURE_2D, 0);
+                glBindVertexArray(0);
+                //        glEnable(GL_BLEND);
+                //        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                //        glDisable(GL_BLEND);
+                glUseProgram(0);
+            }
 
         }
         // hacky input visualization
@@ -340,8 +289,8 @@ GAME_UPDATE(gameUpdate)
             glUniformMatrix4fv(projMatrix, 1, GL_FALSE, glm::value_ptr(glmProjection));
             
             glBindVertexArray(rr->VAOs[1]);
-            //TODO(james): for now everything is a cube
-            glDrawElements(GL_TRIANGLES, gameState->models[0].baseMesh.numIndices, GL_UNSIGNED_INT, 0);
+            
+            glDrawElements(GL_TRIANGLES, gameState->models[1].renderMeshes->mesh->numIndices, GL_UNSIGNED_INT, 0);
             glBindTexture(GL_TEXTURE_2D, 0);
             glBindVertexArray(0);
             //        glEnable(GL_BLEND);

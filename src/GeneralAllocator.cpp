@@ -8,7 +8,7 @@
 #include "GeneralAllocator.h"
 
 internal size_t BLOCK_SPLIT_THRESHOLD = 256;
-
+#define NEW(allocator, thing) (thing *) allocator->alloc(sizeof(thing))
 void *
 GeneralAllocator::alloc(uint64 size, uint8 alignment = 4)
 {

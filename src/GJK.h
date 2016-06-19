@@ -258,7 +258,7 @@ doSimplex(int32 *numPoints, glm::vec3 *points, glm::vec3 *dir)
 {
     bool32 result = false;
     char log[512];
-    sprintf_s(log, "numPoints: %d\n", *numPoints);
+    sproot(log, "numPoints: %d\n", *numPoints);
     gLog(log);
     real32 GJK_EPISILON = 0.000001;
     switch(*numPoints)
@@ -306,9 +306,9 @@ doSimplex(int32 *numPoints, glm::vec3 *points, glm::vec3 *dir)
             real32 ACDdotAO = glm::dot(ACD, AO);
             real32 ADBdotAO = glm::dot(ADB, AO);
             
-            if(ABCdotAO > 0 && ABCdotAO - GJK_EPISILON < 0 ||
-               ACDdotAO > 0 && ACDdotAO - GJK_EPISILON < 0 ||
-               ADBdotAO > 0 && ADBdotAO - GJK_EPISILON < 0)
+            if((ABCdotAO > 0 && ABCdotAO - GJK_EPISILON < 0) ||
+               (ACDdotAO > 0 && ACDdotAO - GJK_EPISILON < 0) ||
+               (ADBdotAO > 0 && ADBdotAO - GJK_EPISILON < 0))
             {
                 //sprintf_s(log, "ABC %f, ACD %f, ADB %f\n", ABCdotAO, ACDdotAO, ADBdotAO);
                 //gLog(log);

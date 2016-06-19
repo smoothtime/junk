@@ -62,9 +62,11 @@ typedef uintptr_t uptr;
 
 #if COMPILER_MSVC
 #include <GLM\glm.hpp>
+#define sproot sprintf_s
 #else
 #if COMPILER_LLVM
 #include <GLM/glm.hpp>
+#define sproot sprintf
 #endif
 #endif
 
@@ -127,6 +129,15 @@ typedef struct GameInput
 
 #define GAME_UPDATE(functionName) void functionName(thread_context *thread, GameMemory *memory, GameInput *input, real64 deltaTime, bool32 reloadExtensions)
 typedef GAME_UPDATE(GameUpdate);
+
+struct RenderReferenceIndex {
+    uint32 shaderIndex;
+    uint32 textureIndex;
+    uint32 VAOIndex;
+    uint32 VBOIndex;
+    uint32 EBOIndex;
+    uint32 numIndices;
+};
 
 #define PLATFORM_H
 #endif

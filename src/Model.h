@@ -10,8 +10,13 @@
 struct Vertex
 {
     glm::vec3 pos;
-//    glm::vec3 colors;
     glm::vec2 texCoords;    
+};
+
+struct AABBox
+{    
+    glm::vec3 minBound;
+    glm::vec3 maxBound;
 };
 
 struct Mesh
@@ -22,12 +27,25 @@ struct Mesh
     uint32 *indices;
 };
 
+struct RenderMesh
+{
+    Mesh *mesh;
+    RenderReferenceIndex rri;
+};
+
+struct CollisionMeshPair
+{
+    Mesh *baseMesh;
+    Mesh *worldMesh;
+};
+
 struct Model
 {
-    Mesh baseMesh;
-    Mesh worldMesh;
-    char *vShaderPath;
-    char *fShaderPath;
+    AABBox aabb;
+    uint32 numRenderMesh;
+    RenderMesh *renderMeshes;
+    uint32 numCollisionMesh;
+    CollisionMeshPair *collisionMeshes;
 };
 
 void
