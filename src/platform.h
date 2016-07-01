@@ -76,7 +76,6 @@ typedef uintptr_t uptr;
 #include "MemoryArena.h"
 #include "utils.h"
 
-
 typedef struct thread_context
 {
     int placeholder;

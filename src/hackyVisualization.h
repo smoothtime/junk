@@ -17,7 +17,6 @@ initHackyVisModel(GameState *gameState, Camera * cam, glm::vec3 rayDir)
     Mesh *baseMesh;
     Mesh *worldMesh;
     
-    // IMPORTANT(james): dont allocate every time
     bool32 needsToBeAllocated = (clickVisModel->numRenderMesh == 0);
     if(needsToBeAllocated)
     {
@@ -112,16 +111,16 @@ initHackyVisModel(GameState *gameState, Camera * cam, glm::vec3 rayDir)
     if(needsToBeAllocated)
     {
         initVertexIndexBuffers(gameState->rendRefs, clickVis);
-        gameState->staticEntities[5] = {};
+        gameState->dynamicEntities[5] = {};
     }
     else
     {
         RenderReferenceIndex toClear = { HACKY_VIS_IDX, HACKY_VIS_IDX, HACKY_VIS_IDX, HACKY_VIS_IDX, HACKY_VIS_IDX };
         overrideVertexBuffers(gameState->rendRefs, toClear, clickVis);
     }
-    gameState->staticEntities[5].model = clickVisModel;
-    gameState->staticEntities[5].model->aabb = createBaseAABBox(clickVis);
-    AABBox what = gameState->staticEntities[5].model->aabb;
+    gameState->dynamicEntities[5].model = clickVisModel;
+    gameState->dynamicEntities[5].model->aabb = createBaseAABBox(clickVis);
+    AABBox what = gameState->dynamicEntities[5].model->aabb;
     assert(what.minBound.x < what.maxBound.x);
     assert(what.minBound.y < what.maxBound.y);
     assert(what.minBound.z < what.maxBound.z);

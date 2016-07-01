@@ -9,7 +9,6 @@
 #include "platform.h"
 #include "GeneralAllocator.cpp"
 #include "Model.h"
-#include "glRender.h"
 #include "Entity.cpp"
 #include "GJK.h"
 #include "Octree.cpp"
@@ -51,11 +50,12 @@ initCamera(glm::vec3 pos, glm::vec3 dir, glm::vec3 worldUp)
     return result;
 }
 
+struct RenderReferences;
 struct GameState
 {
     MemoryArena memArena;
     GeneralAllocator *assetAlctr;
-    Entity staticEntities[10000];
+    Entity dynamicEntities[10000];
     uint32 entityCount;
     Octree *staticEntityTree;
     Camera camera;
@@ -63,11 +63,10 @@ struct GameState
     uint32 numModels;
     Model *models;
     RenderReferences *rendRefs;
+    uint32 resWidth, resHeight;
 
     real64 deltaTime;
 };
-
-#include "hackyVisualization.h"
 
 struct readMeshListEntry
 {

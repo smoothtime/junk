@@ -7,46 +7,50 @@
    ======================================================================== */
 #include "Entity.h"
 
-AABBox
-createBaseAABBox(Mesh *model)
+void
+updateAABBox(AABBox *box, Mesh *mesh)
 {
-    glm::vec3 minBounds = model->vertices[0].pos;
-    glm::vec3 maxBounds = minBounds;
-
-    for(uint32 v = 1;
-        v < model->numVerts;
+    for(uint32 v = 0;
+        v < mesh->numVerts;
         ++v)
     {
-        glm::vec3 comp = model->vertices[v].pos;
-        if(comp.x < minBounds.x)
+        glm::vec3 *comp = &mesh->vertices[v].pos;
+        if(comp->x < box->minBound.x)
         {
-            minBounds.x = comp.x;
+            box->minBound.x = comp->x;
         }
-        if(comp.y < minBounds.y)
+        if(comp->y < box->minBound.y)
         {
-            minBounds.y = comp.y;
+            box->minBound.y = comp->y;
         }
-        if(comp.z < minBounds.z)
+        if(comp->z < box->minBound.z)
         {
-            minBounds.z = comp.z;
+            box->minBound.z = comp->z;
         }
-        if(comp.x > maxBounds.x)
+        if(comp->x > box->maxBound.x)
         {
-            maxBounds.x = comp.x;
+            box->maxBound.x = comp->x;
         }
-        if(comp.y > maxBounds.y)
+        if(comp->y > box->maxBound.y)
         {
-            maxBounds.y = comp.y;
+            box->maxBound.y = comp->y;
         }
-        if(comp.z > maxBounds.z)
+        if(comp->z > box->maxBound.z)
         {
-            maxBounds.z = comp.z;
+            box->maxBound.z = comp->z;
         }
     }
-    
+}
 
-    AABBox bounds = { minBounds, maxBounds };
-    return bounds;
+AABBox
+createBaseAABBox(Mesh *mesh)
+{
+    AABBox result = {};
+    result.minBound = mesh->vertices[0].pos;
+    result.maxBound = result.minBound;
+
+    updateAABBox(&result, mesh);
+    return result;
 }
 
 AABBox

@@ -6,6 +6,8 @@
    $Notice: (C) Copyright 2015 by Extreme, Inc. All Rights Reserved. $
    ======================================================================== */
 #include "game.h"
+#include "glRender.h"
+#include "hackyVisualization.h"
 
 // expects mouseY to be 0 = top resY = bottom
 // pitch and yaw in radians
@@ -53,8 +55,85 @@ GAME_UPDATE(gameUpdate)
         }
 
         gameState->rendRefs = (RenderReferences *) gameState->assetAlctr->alloc(sizeof(RenderReferences));
-        
         RenderReferences *rr = gameState->rendRefs;
+        // initialize color picking buffers
+        glGenFramebuffers(1, &rr->colorPickFBO);
+        glBindFramebuffer(GL_FRAMEBUFFER, rr->colorPickFBO);
+        glGenTextures(1, &rr->colorPickTexture);
+        char log[256];
+        sproot(log, "color pick texture %d", rr->colorPickTexture);
+        gLog(log);
+        glBindTexture(GL_TEXTURE_2D, rr->colorPickTexture);
+        checkGLError(gLog);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        checkGLError(gLog);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        checkGLError(gLog);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        checkGLError(gLog);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        checkGLError(gLog);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, input->resX, input->resY, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+        checkGLError(gLog);
+        glGenRenderbuffers(1, &rr->colorPickDepthRenderBuffer);
+        checkGLError(gLog);
+        glBindRenderbuffer(GL_RENDERBUFFER, rr->colorPickDepthRenderBuffer);
+        checkGLError(gLog);
+        //glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, gameState->resWidth, gameState->resHeight);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, rr->colorPickTexture, 0);
+        checkGLError(gLog);
+        //glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rr->colorPickDepthRenderBuffer);
+        GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+        if(status == GL_FRAMEBUFFER_COMPLETE)
+        {
+            gLog("lovely");
+        }
+        else if(status == GL_FRAMEBUFFER_UNDEFINED)
+        {
+            gLog("could not create color framebuffer. framebuffer undefined");
+            assert(false);
+        }
+        else if(status == GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT)
+        {
+            gLog("could not create color framebuffer. incomplete attachment");
+            assert(false);
+        }
+        else if(status == GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT)
+        {
+            gLog("could not create color framebuffer. missing attachment");
+            assert(false);
+        }
+        else if(status == GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER)
+        {
+            gLog("could not create color framebuffer. incomplete draw buffer");
+            assert(false);
+        }
+        else if(status == GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER)
+        {
+            gLog("could not create color framebuffer. incomplete read buffer");
+            assert(false);
+        }
+        else if(status == GL_FRAMEBUFFER_UNSUPPORTED)
+        {
+            gLog("could not create color framebuffer. unsupported?");
+            assert(false);
+        }
+        else if(status == GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE)
+        {
+            gLog("could not create color framebuffer. incomplete multisample");
+            assert(false);
+        }
+        else if(status == GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS)
+        {
+            gLog("could not create color framebuffer. incomplete layer targets");
+            assert(false);
+        }
+        
+
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        // allocate memory for additional shaders, textures, etc
         rr->maxObjects = 256;
         rr->shaders = (Shader *) gameState->assetAlctr->alloc(sizeof(Shader) * rr->maxObjects);
         rr->textures = (GLuint *) gameState->assetAlctr->alloc(sizeof(GLuint) * rr->maxObjects);
@@ -90,19 +169,20 @@ GAME_UPDATE(gameUpdate)
         gameState->entityCount = 5;
         for(uint32 x = 0; x < 5; ++x)
         {
-            Entity *ent = &gameState->staticEntities[x];
+            Entity *ent = &gameState->dynamicEntities[x];
             ent->isStatic = true;
             ent->entityIndex = x;
             ent->position = glm::vec3(3.5f * x, 0.0f, -3.0f);
             ent->transMtx = glm::translate(glm::mat4(), ent->position);
             ent->rotMtx = glm::mat4(1);
             ent->model = model;
+            model->aabb = createBaseAABBox(model->collisionMeshes[0].baseMesh);
 
-            for(uint32 cmIdx = 0; cmIdx < model->numCollisionMesh; ++cmIdx)
+            // for every mesh past the first, update bounds to include all meshes
+            for(uint32 cmIdx = 1; cmIdx < model->numCollisionMesh; ++cmIdx)
             {
                 Mesh *m = model->collisionMeshes[cmIdx].baseMesh;
-                // TODO(james) IMPORTANT(james): make an AABB by looking over all meshes in model
-                model->aabb = createBaseAABBox(m);
+                updateAABBox(&model->aabb, m);
             }
         }
     }
@@ -189,36 +269,39 @@ GAME_UPDATE(gameUpdate)
             initHackyVisModel(gameState, cam, rayDir);
         }
         
-        Entity *hackyVisEnt = gameState->staticEntities + 5;
+        Entity *hackyVisEnt = gameState->dynamicEntities + 5;
 
         // Simulate
         for(uint32 x = 0;
             x < gameState->entityCount;
             x++)
         {
-            Entity *ent = &gameState->staticEntities[x];
-            if(hackyVisEnt->model != 0)// && doBoundsCollide(box1, box2))
+            Entity *ent = &gameState->dynamicEntities[x];
+            if(hackyVisEnt->model != 0)
             {
                 AABBox box1 = transformAABB(ent->transMtx * ent->rotMtx, &ent->model->aabb);
                 AABBox box2 = hackyVisEnt->model->aabb;
-                for(uint32 meshIdx = 0;
-                    meshIdx < ent->model->numCollisionMesh;
-                    ++meshIdx)
+                if(doBoundsCollide(box1, box2))
                 {
-                    CollisionMeshPair cmp = ent->model->collisionMeshes[meshIdx];
-                    transformMesh(ent->transMtx, cmp.baseMesh, cmp.worldMesh);
-                    if(genericGJK(cmp.worldMesh, hackyVisEnt->model->collisionMeshes->baseMesh))
+                    for(uint32 meshIdx = 0;
+                        meshIdx < ent->model->numCollisionMesh;
+                        ++meshIdx)
                     {
+                        CollisionMeshPair cmp = ent->model->collisionMeshes[meshIdx];
+                        transformMesh(ent->transMtx, cmp.baseMesh, cmp.worldMesh);
+                        if(genericGJK(cmp.worldMesh, hackyVisEnt->model->collisionMeshes->baseMesh))
+                        {
 
-                        glm::vec3 delta = glm::vec3(0.0f, 0.0f, 0.01f) ;
+                            glm::vec3 delta = glm::vec3(0.0f, 0.0f, 0.01f) ;
 
-                        ent->position += delta;
-                        ent->transMtx = glm::translate(ent->transMtx, delta);
-                        break;
-                    }
-                    else
-                    {
-                        uint32 notColliding = 1;
+                            ent->position += delta;
+                            ent->transMtx = glm::translate(ent->transMtx, delta);
+                            break;
+                        }
+                        else
+                        {
+                            uint32 notColliding = 1;
+                        }
                     }
                 }
             }
@@ -229,48 +312,26 @@ GAME_UPDATE(gameUpdate)
         }
         
         // Render
-        glEnable(GL_DEPTH_TEST);
         RenderReferences *rr = gameState->rendRefs;        
-        
+        if(input->newLeftClick)
+        {
+            glBindFramebuffer(GL_FRAMEBUFFER, rr->colorPickFBO);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, rr->colorPickTexture, 0);
+            glViewport(0, 0, input->resX, input->resY);
+            glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+            renderEntities(gameState, glmView, glmProjection);
+
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        }
+
+        glEnable(GL_DEPTH_TEST);
         glClearColor(0.6f, 0.6f, 0.6f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    
-        for(uint32 x = 0;
-            x < gameState->entityCount;
-            x++)
-        {
-            Entity *entity = gameState->staticEntities + x;
-            glmModel = entity->transMtx * entity->rotMtx;
-            for(uint32 m = 0;
-                m < entity->model->numRenderMesh;
-                ++m)
-            {
-                RenderMesh *rm = entity->model->renderMeshes + m;
-                GLuint shaderProgram = rr->shaders[rm->rri.shaderIndex].program;
-                glUseProgram(shaderProgram);
-                glActiveTexture(GL_TEXTURE0);
-                glBindTexture(GL_TEXTURE_2D, rr->textures[rm->rri.textureIndex]);
-                glUniform1i(glGetUniformLocation(shaderProgram, "ourTexture1"), 0);
 
-                GLint modelMatrix = glGetUniformLocation(shaderProgram, "model");
-                GLint viewMatrix = glGetUniformLocation(shaderProgram, "view");
-                GLint projMatrix = glGetUniformLocation(shaderProgram, "projection");
+        renderEntities(gameState, glmView, glmProjection);
         
-                glUniformMatrix4fv(modelMatrix, 1, GL_FALSE, glm::value_ptr(glmModel));
-                glUniformMatrix4fv(viewMatrix, 1, GL_FALSE, glm::value_ptr(glmView));
-                glUniformMatrix4fv(projMatrix, 1, GL_FALSE, glm::value_ptr(glmProjection));
-            
-                glBindVertexArray(rr->VAOs[rm->rri.VAOIndex]);
-                glDrawElements(GL_TRIANGLES, rm->rri.numIndices, GL_UNSIGNED_INT, 0);
-                glBindTexture(GL_TEXTURE_2D, 0);
-                glBindVertexArray(0);
-                //        glEnable(GL_BLEND);
-                //        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-                //        glDisable(GL_BLEND);
-                glUseProgram(0);
-            }
-
-        }
         // hacky input visualization
         if(input->leftClick || rr->VAOs[1] != 0)
         {

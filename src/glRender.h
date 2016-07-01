@@ -13,6 +13,9 @@
 #include "Shader.cpp"
 
 struct RenderReferences {
+    uint32 colorPickFBO;
+    uint32 colorPickTexture;
+    uint32 colorPickDepthRenderBuffer;
     uint32 maxObjects;
     uint32 numShaders;
     uint32 numTextures;
@@ -109,5 +112,57 @@ overrideVertexBuffers(RenderReferences *rendRefs, RenderReferenceIndex toClear, 
 
     glBindVertexArray(0);
 }
+
+void renderEntities(GameState *gameState, glm::mat4 glmView, glm::mat4 glmProjection)
+{
+    glm::mat4 glmModel;
+    RenderReferences *rr = gameState->rendRefs;
+    for(uint32 x = 0;
+            x < gameState->entityCount;
+            x++)
+        {
+            Entity *entity = gameState->dynamicEntities + x;
+            glmModel = entity->transMtx * entity->rotMtx;
+            for(uint32 m = 0;
+                m < entity->model->numRenderMesh;
+                ++m)
+            {
+
+                RenderMesh *rm = entity->model->renderMeshes + m;
+                GLuint shaderProgram = rr->shaders[rm->rri.shaderIndex].program;
+                glUseProgram(shaderProgram);
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, rr->textures[rm->rri.textureIndex]);
+                glUniform1i(glGetUniformLocation(shaderProgram, "ourTexture1"), 0);
+
+                GLint modelMatrix = glGetUniformLocation(shaderProgram, "model");
+                GLint viewMatrix = glGetUniformLocation(shaderProgram, "view");
+                GLint projMatrix = glGetUniformLocation(shaderProgram, "projection");
+        
+                glUniformMatrix4fv(modelMatrix, 1, GL_FALSE, glm::value_ptr(glmModel));
+                glUniformMatrix4fv(viewMatrix, 1, GL_FALSE, glm::value_ptr(glmView));
+                glUniformMatrix4fv(projMatrix, 1, GL_FALSE, glm::value_ptr(glmProjection));
+            
+                glBindVertexArray(rr->VAOs[rm->rri.VAOIndex]);
+                glDrawElements(GL_TRIANGLES, rm->rri.numIndices, GL_UNSIGNED_INT, 0);
+                glBindTexture(GL_TEXTURE_2D, 0);
+                glBindVertexArray(0);
+                //        glEnable(GL_BLEND);
+                //        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                //        glDisable(GL_BLEND);
+                glUseProgram(0);
+            }
+
+        }
+}
+
+void checkGLError(platformLog* log)
+{
+    char blep[256];
+    GLenum x = glGetError();
+    sproot(blep, "the error %d", x);
+    log(blep);
+}
+
 #define GLRENDER_H
 #endif

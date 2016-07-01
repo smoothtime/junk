@@ -226,5 +226,7 @@ main(int32 argc, char **argv)
         glfwSwapBuffers(window);
     }
 
+    // TODO: IMPORTANT: may need to clean up rendering stuff
+
     glfwTerminate();
 }
