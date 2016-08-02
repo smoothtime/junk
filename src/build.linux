@@ -1,0 +1,7 @@
+if [[ ! -d ../build ]];
+then mkdir ../build
+fi
+pushd ../build
+clang++ -std=c++11 -g -shared -I../src/include -L../lib/ -o libgame.so ../src/game.cpp -l:libGLEW.so.2.0.0 -fPIC
+clang++ -std=c++11 -g -I../src/include -L../lib ../src/linux_main.cpp -ldl -lGL -l:libGLEW.so.2.0.0 -l:libglfw.so.3.2 -fPIC
+popd

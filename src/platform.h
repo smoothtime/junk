@@ -64,15 +64,13 @@ typedef uintptr_t uptr;
 #include <GLM\glm.hpp>
 #define sproot sprintf_s
 #else
-#if COMPILER_LLVM
 #include <GLM/glm.hpp>
 #define sproot sprintf
 #endif
-#endif
 
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtx/rotate_vector.hpp>
+#include <GLM/gtc/matrix_transform.hpp>
+#include <GLM/gtc/type_ptr.hpp>
+#include <GLM/gtx/rotate_vector.hpp>
 #include "MemoryArena.h"
 #include "utils.h"
 
