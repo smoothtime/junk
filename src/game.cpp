@@ -56,7 +56,8 @@ GAME_UPDATE(gameUpdate)
 
         gameState->rendRefs = (RenderReferences *) gameState->assetAlctr->alloc(sizeof(RenderReferences));
         RenderReferences *rr = gameState->rendRefs;
-        // initialize color picking buffers
+        // initialize color picking resources
+        rr->colorPickShader = Shader("../data/colorpick_vshader.vs", "../data/colorpick_fshader.fs"); 
         glGenFramebuffers(1, &rr->colorPickFBO);
         glBindFramebuffer(GL_FRAMEBUFFER, rr->colorPickFBO);
         glGenTextures(1, &rr->colorPickTexture);
@@ -195,9 +196,7 @@ GAME_UPDATE(gameUpdate)
         }
     }
     else
-    {
-        gLog("?\n");
-        
+    {   
         gameState->deltaTime = deltaTime;
         real32 sensitivity = 0.001f;
         real32 camSpeed = 10.0f * (real32) deltaTime;
@@ -321,8 +320,22 @@ GAME_UPDATE(gameUpdate)
             glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-            renderEntities(gameState, glmView, glmProjection);
-
+            renderEntities(gameState, glmView, glmProjection, true);
+            glFlush();
+            glFinish();
+            glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+            
+            uint8 pixelColor[4];
+            glReadPixels(input->mouseX, input->resY - input->mouseY, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, pixelColor);
+            if(pixelColor[0] > 0)
+            {
+                char log[256];
+                uint32 objectID = pixelColor[0]
+                                  + (pixelColor[1] * 256)
+                                  + (pixelColor[2] * (256 * 256));
+                sproot(log, "\nclicked on a thing with id: %d\nColors: %d, %d, %d", objectID, pixelColor[0], pixelColor[1], pixelColor[2]);
+                gLog(log);
+            }
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
         }
 
@@ -330,7 +343,7 @@ GAME_UPDATE(gameUpdate)
         glClearColor(0.6f, 0.6f, 0.6f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        renderEntities(gameState, glmView, glmProjection);
+        renderEntities(gameState, glmView, glmProjection, false);
         
         // hacky input visualization
         if(input->leftClick || rr->VAOs[1] != 0)
