@@ -148,8 +148,8 @@ GAME_UPDATE(gameUpdate)
         gameState->models = (Model *) gameState->assetAlctr->alloc(sizeof(Model) * gameState->maxModels);
 
         // hardcoded test model and textures
-        Model *model = loadModel(thread, gameState, memory->platformServiceReadFile, "../data/cube.3ds", false);
-        model = loadModel(thread, gameState, memory->platformServiceReadFile, "../data/cube.3ds", true);
+        Model *model = loadModel(thread, gameState, memory->platformServiceReadFile, "../data/test.3ds", false);
+        model = loadModel(thread, gameState, memory->platformServiceReadFile, "../data/test.3ds", true);
         gameState->numModels++;
 
         assert(model->numRenderMesh > 0);

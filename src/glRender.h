@@ -144,12 +144,10 @@ void renderEntities(GameState *gameState, glm::mat4 glmView, glm::mat4 glmProjec
                 shaderProgram = rr->colorPickShader.program;
                 glUseProgram(shaderProgram);
                 GLint objectIDUniform = glGetUniformLocation(shaderProgram, "objectID");
-                printf("rendering object of object ID %d", x);
                 uint32 colorID[3] = { ((x + 1) & 0x000000FF) >> 0,
                                       ((x + 1) & 0x0000FF00) >> 8,
                                       ((x + 1) & 0x00FF0000) >> 16
                 };
-                printf("colors %d, %d, %d\n", colorID[0], colorID[1], colorID[2]);
                 glUniform3f(objectIDUniform, (real32) colorID[0] / 255.0f, (real32) colorID[1] / 255.0f, (real32) colorID[2] / 255.0f);
             }
             GLint modelMatrix = glGetUniformLocation(shaderProgram, "model");
