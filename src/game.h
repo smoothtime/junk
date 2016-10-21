@@ -65,6 +65,8 @@ struct GameState
     RenderReferences *rendRefs;
     uint32 resWidth, resHeight;
 
+    bool32 isLevelStarted;
+    uint32 gameLevel;
     real64 deltaTime;
 };
 

@@ -48,6 +48,15 @@ struct Model
     CollisionMeshPair *collisionMeshes;
 };
 
+struct Asset
+{
+    const char *renderModelFileName;
+    const char *collisionModelFileName;
+    const char *vShaderFileName;
+    const char *fShaderlFileName;
+    const char *textureFileName;
+};
+
 void
 transformMesh(glm::mat4 transform, Mesh *baseMesh, Mesh *toStore)
 {

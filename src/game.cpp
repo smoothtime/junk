@@ -28,6 +28,71 @@ getClickRay(real32 mouseX, uint32 resX, real32 mouseY, uint32 resY, real32 pitch
     return rayDir;
 }
 
+void
+initializeLevel(GameState *gameState, thread_context *thread, GameMemory *memory)
+{
+    switch(gameState->gameLevel)
+    {
+        case 0:
+        {
+            //TODO: bundle asset file so it knows what model to pair with what shader, etc
+            // hardcoded test model and texture
+            Asset testModel = {};
+            testModel.renderModelFileName = "../data/test.3ds";
+            testModel.collisionModelFileName = "../data/test.3ds";
+            testModel.vShaderFileName = "";
+            testModel.fShaderlFileName = "";
+            testModel.textureFileName = "";
+            
+            Model *model = loadModel(thread, gameState, memory->platformServiceReadFile,  "../data/test.3ds", false);
+            model = loadModel(thread, gameState, memory->platformServiceReadFile, "../data/test.3ds", true);
+            gameState->numModels++;
+
+            assert(model->numRenderMesh > 0);
+            assert(model->numCollisionMesh > 0);
+            assert(model->renderMeshes->mesh->numVerts != 0);
+            assert(model->collisionMeshes->baseMesh->numVerts != 0);
+            assert(model->collisionMeshes->worldMesh->numVerts != 0);
+
+            for(uint32 meshIdx = 0; meshIdx < model->numRenderMesh; ++meshIdx)
+            {
+                Mesh *m = model->renderMeshes[meshIdx].mesh;
+                uint32 sIdx = initShader(gameState->rendRefs, "../data/vshader_1.vs", "../data/fshader_1.fs");
+                uint32 tIdx = initTexture(gameState->rendRefs, "../data/wall.jpg");
+                uint32 vIdx = initVertexIndexBuffers(gameState->rendRefs, m);
+                model->renderMeshes[meshIdx].rri = { sIdx, tIdx, vIdx, vIdx, vIdx, m->numIndices };
+            }
+        
+            gameState->entityCount = 5;
+            for(uint32 x = 0; x < 5; ++x)
+            {
+                Entity *ent = &gameState->dynamicEntities[x];
+                ent->isStatic = true;
+                ent->entityIndex = x;
+                ent->position = glm::vec3(3.5f * x, 0.0f, -3.0f);
+                ent->transMtx = glm::translate(glm::mat4(), ent->position);
+                ent->rotMtx = glm::mat4(1);
+                ent->model = model;
+                model->aabb = createBaseAABBox(model->collisionMeshes[0].baseMesh);
+
+                // for every mesh past the first, update bounds to include all meshes
+                for(uint32 cmIdx = 1; cmIdx < model->numCollisionMesh; ++cmIdx)
+                {
+                    Mesh *m = model->collisionMeshes[cmIdx].baseMesh;
+                    updateAABBox(&model->aabb, m);
+                }
+            }
+            gameState->isLevelStarted = true;
+            break;
+        }
+        case 1:
+            break;
+        default:
+            assert(false);
+            break;
+    }
+}
+
 extern "C"
 GAME_UPDATE(gameUpdate)
 {
@@ -147,45 +212,8 @@ GAME_UPDATE(gameUpdate)
         gameState->maxModels = 128;
         gameState->models = (Model *) gameState->assetAlctr->alloc(sizeof(Model) * gameState->maxModels);
 
-        // hardcoded test model and textures
-        Model *model = loadModel(thread, gameState, memory->platformServiceReadFile, "../data/test.3ds", false);
-        model = loadModel(thread, gameState, memory->platformServiceReadFile, "../data/test.3ds", true);
-        gameState->numModels++;
-
-        assert(model->numRenderMesh > 0);
-        assert(model->numCollisionMesh > 0);
-        assert(model->renderMeshes->mesh->numVerts != 0);
-        assert(model->collisionMeshes->baseMesh->numVerts != 0);
-        assert(model->collisionMeshes->worldMesh->numVerts != 0);
-
-        for(uint32 meshIdx = 0; meshIdx < model->numRenderMesh; ++meshIdx)
-        {
-            Mesh *m = model->renderMeshes[meshIdx].mesh;
-            uint32 sIdx = initShader(gameState->rendRefs, "../data/vshader_1.vs", "../data/fshader_1.fs");
-            uint32 tIdx = initTexture(gameState->rendRefs, "../data/wall.jpg");
-            uint32 vIdx = initVertexIndexBuffers(gameState->rendRefs, m);
-            model->renderMeshes[meshIdx].rri = { sIdx, tIdx, vIdx, vIdx, vIdx, m->numIndices };
-        }
-        
-        gameState->entityCount = 5;
-        for(uint32 x = 0; x < 5; ++x)
-        {
-            Entity *ent = &gameState->dynamicEntities[x];
-            ent->isStatic = true;
-            ent->entityIndex = x;
-            ent->position = glm::vec3(3.5f * x, 0.0f, -3.0f);
-            ent->transMtx = glm::translate(glm::mat4(), ent->position);
-            ent->rotMtx = glm::mat4(1);
-            ent->model = model;
-            model->aabb = createBaseAABBox(model->collisionMeshes[0].baseMesh);
-
-            // for every mesh past the first, update bounds to include all meshes
-            for(uint32 cmIdx = 1; cmIdx < model->numCollisionMesh; ++cmIdx)
-            {
-                Mesh *m = model->collisionMeshes[cmIdx].baseMesh;
-                updateAABBox(&model->aabb, m);
-            }
-        }
+        gameState->isLevelStarted = false;
+        gameState->gameLevel = 0;
     }
     else if(reloadExtensions)
     {
@@ -196,7 +224,12 @@ GAME_UPDATE(gameUpdate)
         }
     }
     else
-    {   
+    {
+        if(!gameState->isLevelStarted)
+        {
+            initializeLevel(gameState, thread, memory);
+        }
+        
         gameState->deltaTime = deltaTime;
         real32 sensitivity = 0.001f;
         real32 camSpeed = 10.0f * (real32) deltaTime;
