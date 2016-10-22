@@ -48,7 +48,7 @@ struct Model
     CollisionMeshPair *collisionMeshes;
 };
 
-struct Asset
+struct Renderable
 {
     const char *renderModelFileName;
     const char *collisionModelFileName;
