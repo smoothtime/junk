@@ -110,3 +110,53 @@ transformAABB(glm::mat4 transform, AABBox *box)
     return result;
 }
 
+IDSystem *
+initializeIDSystem(MemoryArena *mem)
+{
+    IDSystem *system = PushStruct(mem, IDSystem);
+    system->currentId = 1;
+    
+    return system;
+}
+
+uint32
+IDSystem::getNextID(MemoryArena *mem)
+{
+    mtx.lock();
+    uint32 ret;
+    if(returnedList != NULL)
+    {
+        ret = returnedList->id;
+        
+        returnedList->next = freedFreeList;
+        freedFreeList = returnedList;
+        
+        returnedList = returnedList->next;
+    }
+    else
+    {
+        ret = currentId++;
+    }
+    mtx.unlock();
+    return ret;
+}
+
+void
+IDSystem::returnID(MemoryArena *mem, uint32 id)
+{
+    mtx.lock();
+    IDNode *node;
+    if(freedFreeList != NULL)
+    {
+        node = freedFreeList;
+        freedFreeList = freedFreeList->next;
+    }
+    else
+    {
+        node = PushStruct(mem, IDNode);
+    }
+    node->id = id;
+    node->next = returnedList;
+    returnedList = node;
+    mtx.unlock();
+}

@@ -291,16 +291,17 @@ initializeLevel(GameState *gameState, thread_context *thread, GameMemory *memory
             gameState->entityCount = 5;
             for(uint32 x = 0; x < 5; ++x)
             {
+                uint32 id = gameState->entity_ids->getNextID(&gameState->memArena);
                 Entity *ent = &gameState->dynamicEntities[x];
                 ent->isStatic = true;
-                ent->entityIndex = x;
+                ent->entityID = id;
                 ent->position = glm::vec3(3.5f * x, 0.0f, -3.0f);
                 ent->transMtx = glm::translate(glm::mat4(), ent->position);
                 ent->rotMtx = glm::mat4(1);
                 ent->model = model;
-                model->aabb = createBaseAABBox(model->collisionMeshes[0].baseMesh);
 
                 // for every mesh past the first, update bounds to include all meshes
+                model->aabb = createBaseAABBox(model->collisionMeshes[0].baseMesh);
                 for(uint32 cmIdx = 1; cmIdx < model->numCollisionMesh; ++cmIdx)
                 {
                     Mesh *m = model->collisionMeshes[cmIdx].baseMesh;
@@ -439,6 +440,8 @@ GAME_UPDATE(gameUpdate)
 
         gameState->isLevelStarted = false;
         gameState->gameLevel = 0;
+
+        gameState->entity_ids = initializeIDSystem(memArena);
     }
     else if(reloadExtensions)
     {

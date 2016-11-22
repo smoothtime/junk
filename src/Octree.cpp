@@ -106,7 +106,7 @@ Octree::insert(Entity *entity, MemoryArena *memArena)
         entity_reference *existingReference = entityReferenceBlock->entityReferences + hashIndex;
         if(existingReference->index == 0)
         {
-            existingReference->index =  entity->entityIndex;
+            existingReference->index =  entity->entityID;
             entityReferenceBlock->entityCount++;
         }
         else
@@ -117,7 +117,7 @@ Octree::insert(Entity *entity, MemoryArena *memArena)
                 existingReference = existingReference->next;
             }
             existingReference->next = PushStruct(memArena, entity_reference);
-            existingReference->next->index = entity->entityIndex;
+            existingReference->next->index = entity->entityID;
             existingReference->next->next = 0;
         }
     }

@@ -56,6 +56,7 @@ struct GameState
     MemoryArena memArena;
     GeneralAllocator *assetAlctr;
     Entity dynamicEntities[10000];
+    IDSystem *entity_ids;
     uint32 entityCount;
     Octree *staticEntityTree;
     Camera camera;

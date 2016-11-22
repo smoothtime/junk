@@ -10,7 +10,7 @@
 struct Entity
 {
     bool32 isStatic;
-    uint32 entityIndex;
+    uint32 entityID;
     glm::vec3 position;
     glm::mat4 rotMtx;
     glm::mat4 transMtx;
@@ -39,11 +39,31 @@ entityHashFunction(Entity *entity)
     glm::vec3 size = entity->model->aabb.maxBound - entity->model->aabb.minBound;
     
     hashValue = (uint32) (ceil(origin.x * 10 + origin.y * 5 + origin.z * 3
-                                  - size.x * 10 - origin.y * 5 + origin.z * 3)
-                          + entity->entityIndex);
+                                  - size.x * 10 - size.y * 5 - size.z * 3)
+                          + entity->entityID);
     hashValue = hashValue & (1024 - 1);
     return hashValue;
 }
+
+struct IDNode
+{
+    uint32 id;
+    IDNode *next;
+};
+
+struct IDSystem
+{
+    uint32 currentId;
+    IDNode *returnedList;
+    IDNode *freedFreeList;
+    std::mutex mtx;
+    
+    uint32 getNextID(MemoryArena *mem);
+    void returnID(MemoryArena *mem, uint32 id);
+};
+
+void initializeIDSystem();
+
 
 #define ENTITY_H
 #endif
