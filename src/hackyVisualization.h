@@ -7,19 +7,36 @@
    $Notice: (C) Copyright 2015 by Extreme, Inc. All Rights Reserved. $
    ======================================================================== */
 
-#define HACKY_VIS_IDX 1
+uint32 hvEntityIdx = 0;
+uint32 hvModelIdx = 0;
+uint32 hvRRIdx = 0;
+
+Entity *
+getHackyVisEntity(GameState *gs)
+{
+    Entity *ret = NULL;
+    if(hvEntityIdx != 0)
+    {
+        ret = gs->dynamicEntities + hvEntityIdx;
+    }
+    return ret; 
+}
+
 void
 initHackyVisModel(GameState *gameState, Camera * cam, glm::vec3 rayDir)
 {
     GeneralAllocator *alctr = gameState->assetAlctr;
-    Model *clickVisModel = gameState->models + HACKY_VIS_IDX;
+    Model *clickVisModel;
     Mesh *clickVis;
     Mesh *baseMesh;
     Mesh *worldMesh;
     
-    bool32 needsToBeAllocated = (clickVisModel->numRenderMesh == 0);
+    bool32 needsToBeAllocated = hvEntityIdx == 0;
     if(needsToBeAllocated)
     {
+        hvEntityIdx = gameState->entityCount++;
+        hvModelIdx = gameState->numModels++;
+        clickVisModel = gameState->models + hvModelIdx;
         clickVisModel->numRenderMesh = 1;
         clickVisModel->numCollisionMesh = 1;
         clickVisModel->renderMeshes = (RenderMesh *) alctr->alloc(sizeof(RenderMesh));
@@ -49,6 +66,7 @@ initHackyVisModel(GameState *gameState, Camera * cam, glm::vec3 rayDir)
         baseMesh->indices = (uint32 *) alctr->alloc(sizeof(uint32) * clickVis->numIndices);
         worldMesh->indices = (uint32 *) alctr->alloc(sizeof(uint32) * clickVis->numIndices); 
     }
+    clickVisModel = gameState->models + hvModelIdx;
 
 
     clickVis = clickVisModel->renderMeshes[0].mesh;
@@ -107,20 +125,22 @@ initHackyVisModel(GameState *gameState, Camera * cam, glm::vec3 rayDir)
     clickVis->indices[33] = 1;
     clickVis->indices[34] = 4;
     clickVis->indices[35] = 5;
-            
+
+    Entity *hve = getHackyVisEntity(gameState);
+
     if(needsToBeAllocated)
     {
-        initVertexIndexBuffers(gameState->rendRefs, clickVis);
-        gameState->dynamicEntities[5] = {};
+        hvRRIdx = initVertexIndexBuffers(gameState->rendRefs, clickVis);
+        *hve = {};
     }
     else
     {
-        RenderReferenceIndex toClear = { HACKY_VIS_IDX, HACKY_VIS_IDX, HACKY_VIS_IDX, HACKY_VIS_IDX, HACKY_VIS_IDX };
+        RenderReferenceIndex toClear = { hvRRIdx, hvRRIdx, hvRRIdx, hvRRIdx, hvRRIdx };
         overrideVertexBuffers(gameState->rendRefs, toClear, clickVis);
     }
-    gameState->dynamicEntities[5].model = clickVisModel;
-    gameState->dynamicEntities[5].model->aabb = createBaseAABBox(clickVis);
-    AABBox what = gameState->dynamicEntities[5].model->aabb;
+    hve->model = clickVisModel;
+    hve->model->aabb = createBaseAABBox(clickVis);
+    AABBox what = hve->model->aabb;
     assert(what.minBound.x < what.maxBound.x);
     assert(what.minBound.y < what.maxBound.y);
     assert(what.minBound.z < what.maxBound.z);

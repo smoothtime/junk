@@ -287,12 +287,12 @@ initializeLevel(GameState *gameState, thread_context *thread, GameMemory *memory
             assert(model->collisionMeshes->baseMesh->numVerts != 0);
             assert(model->collisionMeshes->worldMesh->numVerts != 0);
 
-        
-            gameState->entityCount = 5;
+
             for(uint32 x = 0; x < 5; ++x)
             {
+                uint32 curEntIdx = gameState->entityCount++;
                 uint32 id = gameState->entity_ids->getNextID(&gameState->memArena);
-                Entity *ent = &gameState->dynamicEntities[x];
+                Entity *ent = &gameState->dynamicEntities[curEntIdx];
                 ent->isStatic = true;
                 ent->entityID = id;
                 ent->position = glm::vec3(3.5f * x, 0.0f, -3.0f);
@@ -307,6 +307,7 @@ initializeLevel(GameState *gameState, thread_context *thread, GameMemory *memory
                     Mesh *m = model->collisionMeshes[cmIdx].baseMesh;
                     updateAABBox(&model->aabb, m);
                 }
+                
             }
             gameState->isLevelStarted = true;
             break;
@@ -529,7 +530,7 @@ GAME_UPDATE(gameUpdate)
             initHackyVisModel(gameState, cam, rayDir);
         }
         
-        Entity *hackyVisEnt = gameState->dynamicEntities + 5;
+        Entity *hackyVisEnt = getHackyVisEntity(gameState);
 
         // Simulate
         for(uint32 x = 0;
@@ -537,7 +538,7 @@ GAME_UPDATE(gameUpdate)
             x++)
         {
             Entity *ent = &gameState->dynamicEntities[x];
-            if(hackyVisEnt->model != 0)
+            if(hackyVisEnt)
             {
                 AABBox box1 = transformAABB(ent->transMtx * ent->rotMtx, &ent->model->aabb);
                 AABBox box2 = hackyVisEnt->model->aabb;
