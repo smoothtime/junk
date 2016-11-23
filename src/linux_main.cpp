@@ -5,8 +5,6 @@
    $Creator: James Wells $
    $Notice: (C) Copyright 2015 by Extreme, Inc. All Rights Reserved. $
    ======================================================================== */
-#include "platform.h"
-
 #if __has_builtin(__builtin_trap)
 #define Assert(Expression) if(!(Expression)) { __builtin_trap(); }
 #endif

@@ -1,0 +1,5 @@
+if [[ ! -d ../build ]];
+then mkdir ../build
+fi
+pushd ../build
+clang++ -std=c++11 -g -I../src/include -L../lib -o runtests ../src/linux_tests.cpp -ldl -lGL -l:libGLEW.so.2.0.0 -l:libglfw.so.3.2 -fPIC

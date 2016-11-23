@@ -126,12 +126,13 @@ IDSystem::getNextID(MemoryArena *mem)
     uint32 ret;
     if(returnedList != NULL)
     {
-        ret = returnedList->id;
-        
-        returnedList->next = freedFreeList;
-        freedFreeList = returnedList;
+        IDNode *justUsed = returnedList;
+        ret = justUsed->id;
         
         returnedList = returnedList->next;
+        justUsed->next = freedFreeList;
+        freedFreeList = justUsed;
+
     }
     else
     {
