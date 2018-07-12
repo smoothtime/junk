@@ -588,7 +588,7 @@ GAME_UPDATE(gameUpdate)
             glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
             
             uint8 pixelColor[4];
-            glReadPixels(input->mouseX, input->resY - input->mouseY, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, pixelColor);
+            glReadPixels((int)input->mouseX, (int)(input->resY - input->mouseY), 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, pixelColor);
             if(pixelColor[0] > 0)
             {
                 char log[256];

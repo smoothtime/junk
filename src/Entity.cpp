@@ -115,6 +115,7 @@ initializeIDSystem(MemoryArena *mem)
 {
     IDSystem *system = PushStruct(mem, IDSystem);
     system->currentId = 1;
+    std::mutex *mtx = new(&system->mtx) std::mutex;
     
     return system;
 }
