@@ -54,7 +54,7 @@ typedef double real64;
 typedef uintptr_t uptr;
 #define PI32 3.14159265
 
-#define internal static
+#define internalfun static
 
 #define Kilobytes(Value) ((Value)*1024LL)
 #define Megabytes(Value) (Kilobytes(Value)*1024LL)

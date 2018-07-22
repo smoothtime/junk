@@ -1,6 +1,6 @@
 #if !defined(GJK_H)
-/* ========================================================================
-   $File: $
+/* ======================================================================== 
+  $File: $
    $Date: $
    $Revision: $
    $Creator: James Wells $
@@ -260,7 +260,7 @@ doSimplex(int32 *numPoints, glm::vec3 *points, glm::vec3 *dir)
     char log[512];
     sproot(log, "numPoints: %d\n", *numPoints);
     gLog(log);
-    real32 GJK_EPISILON = 0.000001;
+    real32 GJK_EPISILON = (real32) 0.000001;
     switch(*numPoints)
     {
         case 0:

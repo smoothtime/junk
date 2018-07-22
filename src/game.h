@@ -7,6 +7,7 @@
    $Notice: (C) Copyright 2015 by Extreme, Inc. All Rights Reserved. $
    ======================================================================== */
 #include "platform.h"
+#include "eastl_config.h"
 #include "GeneralAllocator.cpp"
 #include "Model.h"
 #include "Entity.cpp"
@@ -46,7 +47,7 @@ initCamera(glm::vec3 pos, glm::vec3 dir, glm::vec3 worldUp)
     result.right = glm::normalize(glm::cross(worldUp, glm::normalize(pos - tar)));;
     result.up = glm::normalize(glm::cross(glm::normalize(pos - tar), result.right));
     result.pitch = 0.0f;
-    result.yaw = PI32 / -2.0f;
+    result.yaw = (real32) PI32 / -2.0f;
     return result;
 }
 

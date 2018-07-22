@@ -12,7 +12,7 @@ struct JString
     uint8 *c;
 };
 
-internal JString *
+internalfun JString *
 readString(MemoryArena *memArena, uint8 *start)
 {
     int32 size = 0;
@@ -27,6 +27,56 @@ readString(MemoryArena *memArena, uint8 *start)
     memcpy(ret->c, start, size);
     return ret;
 }
+
+bool
+compareJStringToMemoryContent(JString jString, uint8 *sequence)
+{
+    for(uint32 i = 0; i < jString.size; i++) {
+        if(jString.c[i] != sequence[i])
+            return false;
+    }
+
+    return true;
+}
+
+
+bool
+compareJStringToCString(JString jString, const char *cString)
+{
+    for(uint32 i = 0; i < jString.size; i++) {
+        if(cString[i] == '\0' || (jString.c[i] != cString[i]))
+            return false;
+    }
+
+    return true;
+}
+
+bool cStringEndsIn(const char *fileName, const char *fileExtension)
+{
+    int i = 0, j = 0;
+    bool endsInExtension = true;
+    while (fileName[i] != '\0')
+    {
+        i++;
+    }
+    while (fileExtension[j] != '\0')
+    {
+        j++;
+    }
+
+    while(j >= 0 && i >= 0) {
+        if (fileName[i] != fileExtension[j]) {
+            endsInExtension = false;
+            break;
+        }
+            
+        j--;
+        i--;
+    }
+    
+    return endsInExtension;
+}
+
 
 #define UTILS_H
 #endif
