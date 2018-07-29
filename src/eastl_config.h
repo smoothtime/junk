@@ -9,6 +9,7 @@
 
 #define EASTL_CONFIG_H
 #endif
+#define EASTL_EASTDC_VSNPRINTF 0
 #include "EABase/eabase.h"
 #include <stddef.h>
 #include <new>
@@ -55,5 +56,10 @@ void operator delete[](void* p)
 {
     if(p)
         free(p);
+}
+
+int __cdecl Vsnprintf8(char8_t* p, size_t n, const char8_t* pFormat, va_list arguments)
+{
+        return vsnprintf(p, n, pFormat, arguments);
 }
 

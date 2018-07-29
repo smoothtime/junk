@@ -265,19 +265,17 @@ loadAndParseBlend(thread_context *thread, GameState *gameState,
 
     // File block parsing
     uint8 *fbreadP;
-    eastl::basic_string<char8_t> fb_identifier;
+    eastl::basic_string<char8_t> identifier;
     eastl::basic_string<char8_t> log;
+    log.set_capacity(200);
     uint32 blockSize;
     uint32 sdnaIdx;
     uint32 structureCount;
     while(readP < (uint8 *)loadedFile.memory + loadedFile.size)
     {
         // we're in a file block
-        fb_identifier.assign((char8_t *)readP, 4);
+        identifier.assign((char8_t *)readP, 4);
         readP += 4;
-        eastl::snprintf(log, "");
-        gLog("\n file block: ");
-        gLog(fb_identifier.c_str());
         blockSize = *(uint32 *)readP;
         fbreadP = readP;
         readP += 4;
@@ -289,7 +287,26 @@ loadAndParseBlend(thread_context *thread, GameState *gameState,
         readP += 4;
         structureCount = *(uint32 *)readP;
         readP += 4;
-        readP += blockSize;
+
+        log.sprintf("file block: %s blocksize: %d sdnaIdx: %d", identifier.c_str(), blockSize, sdnaIdx);
+        if (strcmp(identifier.c_str(), "ME") == 0)
+        {
+            gLog("found a mesh");
+            readP += blockSize;
+        } else if (strcmp(identifier.c_str(), "DNA1") == 0)
+        {
+            identifier.assign((char8_t *)readP, 4);
+            assert(strcmp(identifier.c_str(), "SDNA") == 0);
+            readP +=4;
+            identifier.assign((char8_t *)readP, 4);
+            assert(strcmp(identifier.c_str(), "NAME") == 0);
+            readP +=4;
+            
+            readP += blockSize;
+        } else {
+            readP += blockSize;
+        }
+        gLog(log.c_str());
     }
     return 0;
 }
@@ -313,9 +330,9 @@ Model *loadModel(thread_context *thread, GameState *gameState,
         uint32 vIdx = initVertexIndexBuffers(gameState->rendRefs, m);
         result->renderMeshes[meshIdx].rri = { sIdx, tIdx, vIdx, vIdx, vIdx, m->numIndices };
     }
-    if (cStringEndsIn(rendFiles->renderModelFileName, ".3ds")) {
+    if (cStringEndsIn(rendFiles->collisionModelFileName, ".3ds")) {
         loadAndParse3ds(thread, gameState, psRF, rendFiles->collisionModelFileName, result, true);
-    } else if (cStringEndsIn(rendFiles->renderModelFileName, ".blend")) {
+    } else if (cStringEndsIn(rendFiles->collisionModelFileName, ".blend")) {
         loadAndParseBlend(thread, gameState, psRF, rendFiles->collisionModelFileName, result, true);
     }
 

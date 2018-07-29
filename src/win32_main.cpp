@@ -134,6 +134,7 @@ FREE_FILE(psFreeFile)
 PLATFORM_LOG(win32Log)
 {
     OutputDebugStringA(msg);
+    OutputDebugStringA("\n");
 }
 
 READ_ENTIRE_FILE(psReadEntireFile)
